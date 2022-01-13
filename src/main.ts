@@ -8,7 +8,6 @@ import * as fs from "fs";
 
 // This makes sure we get a non-cached verison of the "latestversion.txt" file for the update check
 app.commandLine.appendSwitch("disable-http-cache");
-app.disableHardwareAcceleration();
 
 const currentVersion = "2.0.0";
 let mainWindow: BrowserWindow = null;
