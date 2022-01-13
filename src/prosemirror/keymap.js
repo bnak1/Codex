@@ -6,6 +6,9 @@ import { wrapInList, splitListItem, liftListItem, sinkListItem } from "prosemirr
 import { undo, redo } from "prosemirror-history";
 import { undoInputRule } from "prosemirror-inputrules";
 
+import { isInTable, goToNextCell } from "prosemirror-tables";
+import { schema } from "./schema";
+
 const mac = typeof navigator != "undefined" ? /Mac/.test(navigator.platform) : false;
 
 // :: (Schema, ?Object) → Object
@@ -36,15 +39,10 @@ const mac = typeof navigator != "undefined" ? /Mac/.test(navigator.platform) : f
 // You can suppress or map these bindings by passing a `mapKeys`
 // argument, which maps key names (say `"Mod-B"` to either `false`, to
 // remove the binding, or a new key name string.
-export function buildKeymap(schema, mapKeys) {
+export function buildKeymap(tabSize) {
 	const keys = {};
 	let type;
 	function bind(key, cmd) {
-		if (mapKeys) {
-			const mapped = mapKeys[key];
-			if (mapped === false) return;
-			if (mapped) key = mapped;
-		}
 		keys[key] = cmd;
 	}
 
@@ -66,6 +64,10 @@ export function buildKeymap(schema, mapKeys) {
 	if (type = schema.marks.em) {
 		bind("Mod-i", toggleMark(type));
 		bind("Mod-I", toggleMark(type));
+	}
+	if (type = schema.marks.underline) {
+		bind("Mod-u", toggleMark(type));
+		bind("Mod-U", toggleMark(type));
 	}
 	if (type = schema.marks.code)
 		bind("Mod-`", toggleMark(type));
@@ -103,6 +105,28 @@ export function buildKeymap(schema, mapKeys) {
 			return true;
 		});
 	}
+
+
+	bind("Tab", (state, dispatch) => {
+
+		if (sinkListItem(schema.nodes.list_item)(state, dispatch)) {
+			return true;
+		}
+		else if (isInTable(state)) {
+			goToNextCell(1)(state, dispatch);
+			return true;
+		}
+		else {
+			if (dispatch) {
+				const tr = state.tr;
+				for (let i = 0; i < tabSize; i++) {
+					tr.insertText(" ").scrollIntoView();
+				}
+				dispatch(tr);
+				return true;
+			}
+		}
+	});
 
 	return keys;
 }

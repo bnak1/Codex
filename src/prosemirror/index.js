@@ -1,6 +1,7 @@
 import { keymap } from "prosemirror-keymap";
 import { history } from "prosemirror-history";
-import {baseKeymap, setBlockType} from "prosemirror-commands";
+import { baseKeymap } from "prosemirror-commands";
+import { buildKeymap } from "./keymap";
 import { EditorState, Plugin } from "prosemirror-state";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
@@ -10,6 +11,7 @@ import { buildInputRules } from "./inputrules";
 import { LANGUAGES } from "./languages";
 import { schema } from "./schema";
 import { highlightPlugin } from "prosemirror-highlightjs";
+import { tableEditing } from "prosemirror-tables";
 import hljs from "highlight.js";
 
 /**
@@ -30,24 +32,37 @@ function isCursorInCodeBlock(state) {
 export function prosemirrorSetup(tabSize) {
 
 	const plugins = [
+
 		buildInputRules(schema),
+
 		keymap(baseKeymap),
+
+		keymap(buildKeymap()),
+
 		dropCursor(),
+
 		gapCursor(),
-		highlightPlugin(hljs)
+
+		highlightPlugin(hljs),
+
+		tableEditing(),
+
+		menuBar({
+			floating: true,
+			content: buildMenuItems().fullMenu
+		}),
+
+		history(),
+		
+		new Plugin({
+			props: {
+				attributes: { class: "ProseMirror-example-setup-style" }
+			}
+		})
+
 	];
 
-	plugins.push(menuBar({
-		floating: true,
-		content: buildMenuItems().fullMenu
-	}));
-	plugins.push(history());
-
-	return plugins.concat(new Plugin({
-		props: {
-			attributes: { class: "ProseMirror-example-setup-style" }
-		}
-	}));
+	return plugins;
 }
 
 export { schema };
