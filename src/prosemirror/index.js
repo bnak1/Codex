@@ -35,9 +35,9 @@ export function prosemirrorSetup(tabSize) {
 
 		buildInputRules(schema),
 
-		keymap(baseKeymap),
+		keymap(buildKeymap(tabSize)),
 
-		keymap(buildKeymap()),
+		keymap(baseKeymap),
 
 		dropCursor(),
 
