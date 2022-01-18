@@ -8,6 +8,7 @@ import { wrapInList } from "prosemirror-schema-list";
 import { TextField, openPrompt } from "./prompt";
 import { schema } from "./schema";
 import { LANGUAGES } from "./languages";
+import { insertMathCmd } from "@benrbray/prosemirror-math";
 
 var myIcons = {
     underline: {
@@ -266,6 +267,7 @@ export function buildMenuItems() {
 	const codeMenu1 = new DropdownSubmenu(languageMenu1, { label: "Code (A-G)" });
 	const codeMenu2 = new DropdownSubmenu(languageMenu2, { label: "Code (H-M)" });
 	const codeMenu3 = new DropdownSubmenu(languageMenu3, { label: "Code (N-Z)" });
+
 
 	r.insertMenu = new Dropdown(cut([r.insertImage, r.insertHorizontalRule]), { label: "Insert" });
 	r.typeMenu = new Dropdown(cut([r.makeParagraph, codeMenu1, codeMenu2, codeMenu3, r.makeHead1 && new DropdownSubmenu(cut([

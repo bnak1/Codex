@@ -2,6 +2,7 @@ import {
 	inputRules, wrappingInputRule, textblockTypeInputRule,
 	smartQuotes, emDash, ellipsis
 } from "prosemirror-inputrules";
+import { makeBlockMathInputRule, makeInlineMathInputRule, REGEX_BLOCK_MATH_DOLLARS, REGEX_INLINE_MATH_DOLLARS } from "@benrbray/prosemirror-math";
 
 import { LANGUAGES } from "./languages";
 
@@ -61,6 +62,10 @@ export function buildInputRules(schema) {
 	for (const lang in LANGUAGES) {
 		rules.push(textblockTypeInputRule(new RegExp("^\\[" + lang + "\\]$"), schema.nodes.code_block, function (match) { return ({ params: lang }); }));
 	}
+
+	// Math equation input rules
+	rules.push(makeInlineMathInputRule(REGEX_INLINE_MATH_DOLLARS, schema.nodes.math_inline));
+    rules.push(makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, schema.nodes.math_display));
 
 	return inputRules({ rules });
 }
