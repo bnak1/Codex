@@ -27,6 +27,34 @@ function isCursorInCodeBlock(state) {
 	return false;
 }
 
+const codeCollapsePlugin = new Plugin({
+    props: {
+        handleClick(view, _, event) {
+            
+            if (event.target.className == "snippetCollapser") {
+
+                const state = view.state;
+                state.doc.nodesBetween(state.selection.from, state.selection.to, (node, pos) => {
+
+                    if (node.type.name == "code_block") {
+
+                        let tr = state.tr;
+
+                        const newAttrs = Object.assign({}, node.attrs);
+                        newAttrs.collapsed = !node.attrs.collapsed;
+                        tr.setNodeMarkup(pos, node.type, newAttrs);
+
+                        tr = tr.setMeta("addToHistory", false);
+
+                        view.dispatch(tr);
+                    }
+                });
+
+            }
+        }
+    }
+});
+
 /**
  * @param {number} tabSize
  */
@@ -45,6 +73,8 @@ export function prosemirrorSetup(tabSize) {
 		gapCursor(),
 
 		highlightPlugin(hljs),
+
+        codeCollapsePlugin,
 
 		tableEditing(),
 

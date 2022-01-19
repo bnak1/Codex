@@ -97,7 +97,6 @@
         "@electron/remote": "^2.0.1",
         "@treverix/custom-electron-titlebar": "^4.2.0",
         "bootstrap": "4.5.0",
-        "crelt": "^1.0.5",
         "electron-context-menu": "^3.1.1",
         "feather-icons": "^4.28.0",
         "highlight.js": "^10.6.0",
