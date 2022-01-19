@@ -4,14 +4,11 @@
     "description": "Codex - Note-taking app for programmers and CS students",
     "homepage": "https://www.codexnotes.com/",
     "repository": "https://github.com/jcv8000/Codex",
-    "main": "dist/main.js",
+    "main": "out/main.js",
     "scripts": {
-        "compile-main": "tsc --project tsconfig.main.json",
-        "compile-renderer": "webpack",
-        "compile-all": "tsc --project tsconfig.main.json && npx webpack",
+        "start": "tsc --project tsconfig.main.json && npx webpack --watch --mode development",
         "serve": "electron .",
-        "dist": "electron-builder",
-        "start": "tsc --project tsconfig.main.json && npx webpack && npx electron ."
+        "dist": "tsc --project tsconfig.main.json && npx webpack --mode production && npx electron-builder"
     },
     "build": {
         "appId": "io.github.jcv8000.codex",

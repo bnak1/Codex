@@ -3,7 +3,8 @@ module.exports = {
 	output: {
 		filename: "renderer.js",
 		libraryTarget: "var",
-		library: "renderer"
+		library: "renderer",
+        path: process.cwd() + "/out/"
 	},
 	module: {
 		rules: [
@@ -17,10 +18,17 @@ module.exports = {
 	resolve: {
 		extensions: [".tsx", ".ts", ".js"],
 	},
-	mode: "production",
+	mode: "none",
 	devtool: "source-map",
 	performance: {
 		maxEntrypointSize: 4250000, // 4 MB
 		maxAssetSize: 4250000
-	}
+	},
+    optimization: {
+        usedExports: true
+    },
+    watchOptions: {
+        aggregateTimeout: 100,
+        poll: 200,
+    }
 };
