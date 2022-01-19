@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "allowJs": true,
-		"module": "ES2015",
+		"module": "CommonJS",
         "moduleResolution": "Node",
 		"skipLibCheck": true,
         "noImplicitAny": true,
@@ -17,6 +17,8 @@
         }
     },
 	"include": [
-		"src/renderer.ts"
+		"src/main.ts",
+		"src/preload.ts",
+		"src/about_preload.ts"
 	]
 }
