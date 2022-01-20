@@ -116,7 +116,7 @@ function linkItem(markType) {
 		title: "Add or remove link",
 		icon: icons.link,
 		active(state) { return markActive(state, markType); },
-		enable(state) { return !state.selection.empty; },
+		enable(state) { return !state.selection.empty && !isCursorInCodeBlock(state); },
 		run(state, dispatch, view) {
 			if (markActive(state, markType)) {
 				toggleMark(markType)(state, dispatch);
