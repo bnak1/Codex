@@ -2,13 +2,19 @@ import {
 	wrapItem, blockTypeItem, Dropdown, DropdownSubmenu, joinUpItem, liftItem,
 	selectParentNodeItem, undoItem, redoItem, icons, MenuItem
 } from "prosemirror-menu";
-import { NodeSelection } from "prosemirror-state";
+import { NodeSelection, Transaction } from "prosemirror-state";
 import {setBlockType, toggleMark} from "prosemirror-commands";
 import { wrapInList } from "prosemirror-schema-list";
 import { TextField, openPrompt } from "./prompt";
 import { schema } from "./schema";
 import { LANGUAGES } from "./languages";
 import { insertMathCmd } from "@benrbray/prosemirror-math";
+import { isInTable } from "prosemirror-tables";
+import { isCursorInCodeBlock } from "./index";
+import { Fragment } from "prosemirror-model";
+import {  addColumnAfter, addColumnBefore, deleteColumn, addRowAfter, addRowBefore, deleteRow,
+    mergeCells, splitCell, setCellAttr, toggleHeaderRow, toggleHeaderColumn, toggleHeaderCell,
+    deleteTable } from "prosemirror-tables";
 
 var myIcons = {
     underline: {
@@ -172,6 +178,48 @@ function makeCodeBlock(language) {
 	};
 }
 
+/**
+ * 
+ * @param {EditorState} state 
+ * @param {Transaction} dispatch 
+ */
+function insertTable(state, dispatch) {
+
+    if (!isCursorInCodeBlock(state)) {
+
+        const tr = state.tr.replaceSelectionWith(
+            state.schema.nodes.table.create(
+                undefined,
+                Fragment.fromArray([
+                    state.schema.nodes.table_row.create(undefined, Fragment.fromArray([
+                        //state.schema.nodes.table_cell.createAndFill(),
+                        //state.schema.nodes.table_cell.createAndFill()
+                        state.schema.nodes.table_cell.create(undefined, Fragment.fromArray([
+                            state.schema.nodes.paragraph.createAndFill(null, state.schema.text("New"))
+                        ])),
+                        state.schema.nodes.table_cell.create(undefined, Fragment.fromArray([
+                            state.schema.nodes.paragraph.createAndFill(null, state.schema.text("Table"))
+                        ]))
+                    ])),
+                    state.schema.nodes.table_row.create(undefined, Fragment.fromArray([
+                        state.schema.nodes.table_cell.createAndFill(),
+                        state.schema.nodes.table_cell.createAndFill()
+                    ]))
+                ])
+            )
+        );
+
+        if (dispatch) {
+            dispatch(tr);
+        }
+
+        return true;
+
+    }
+}
+
+function item(label, cmd) { return new MenuItem({ label, select: cmd, run: cmd }); }
+
 export function buildMenuItems() {
 	const r = {};
 	let type;
@@ -223,13 +271,25 @@ export function buildMenuItems() {
 			});
 	if (type = schema.nodes.horizontal_rule) {
 		const hr = type;
-		r.insertHorizontalRule = new MenuItem({
-			title: "Insert horizontal rule",
-			label: "Horizontal rule",
-			enable(state) { return canInsert(state, hr); },
-			run(state, dispatch) { dispatch(state.tr.replaceSelectionWith(hr.create())); }
-		});
+        r.insertHorizontalRule = new MenuItem({
+            title: "Insert horizontal rule",
+            label: "Horizontal rule",
+            enable: function enable(state) { return (canInsert(state, hr) && !isInTable(state) && !isCursorInCodeBlock(state)); },
+            run: function run(state, dispatch) {
+                if (!isInTable(state) && !isCursorInCodeBlock(state))
+                    dispatch(state.tr.replaceSelectionWith(hr.create()));
+            }
+        });
 	}
+    if (type = schema.nodes.table) {
+        r.insertTable = new MenuItem({
+            label: "Table",
+            run: insertTable,
+            enable: function enable(state) {
+                return !isInTable(state) && !isCursorInCodeBlock(state);
+            }
+        });
+    }
 
 	const languageMenu1 = [];
 	const languageMenu2 = [];
@@ -269,7 +329,25 @@ export function buildMenuItems() {
 	const codeMenu3 = new DropdownSubmenu(languageMenu3, { label: "Code (N-Z)" });
 
 
-	r.insertMenu = new Dropdown(cut([r.insertImage, r.insertHorizontalRule]), { label: "Insert" });
+    const tableMenuItems = [
+        new MenuItem({ label: "Insert Table", select: function select(state) { return !isInTable(state) && isCursorInCodeBlock(state); }, run: insertTable }),
+        item("Insert column before", addColumnBefore),
+        item("Insert column after", addColumnAfter),
+        item("Delete column", deleteColumn),
+        item("Insert row before", addRowBefore),
+        item("Insert row after", addRowAfter),
+        item("Delete row", deleteRow),
+        item("Delete table", deleteTable),
+        item("Merge cells", mergeCells),
+        item("Split cell", splitCell),
+        item("Toggle header column", toggleHeaderColumn),
+        item("Toggle header row", toggleHeaderRow),
+        item("Toggle header cells", toggleHeaderCell),
+        //item("Make cell green", setCellAttr("background", "#dfd")),
+        //item("Make cell not-green", setCellAttr("background", null))
+    ];
+
+	r.insertMenu = new Dropdown(cut([r.insertImage, r.insertHorizontalRule, r.insertTable]), { label: "Insert" });
 	r.typeMenu = new Dropdown(cut([r.makeParagraph, codeMenu1, codeMenu2, codeMenu3, r.makeHead1 && new DropdownSubmenu(cut([
 		r.makeHead1, r.makeHead2, r.makeHead3, r.makeHead4, r.makeHead5, r.makeHead6
 	]), { label: "Heading" })]), { label: "Type..." });
@@ -278,6 +356,8 @@ export function buildMenuItems() {
 	r.blockMenu = [cut([r.wrapBulletList, r.wrapOrderedList, r.wrapBlockQuote, joinUpItem,
 		liftItem, selectParentNodeItem])];
 	r.fullMenu = r.inlineMenu.concat([[r.insertMenu, r.typeMenu]], [[undoItem, redoItem]], r.blockMenu);
+
+    r.fullMenu.splice(2, 0, [new Dropdown(tableMenuItems, { label: "Table" })]);
 
 	return r;
 }

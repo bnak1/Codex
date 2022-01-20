@@ -18,7 +18,7 @@ import hljs from "highlight.js";
 /**
  * @param {EditorState} state
  */
-function isCursorInCodeBlock(state) {
+export function isCursorInCodeBlock(state) {
 	state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
 		if (node.type === schema.nodes["code_block"]) {
 			return true;
