@@ -19,12 +19,32 @@ import hljs from "highlight.js";
  * @param {EditorState} state
  */
 export function isCursorInCodeBlock(state) {
-	state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
+	/*state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
 		if (node.type === schema.nodes["code_block"]) {
 			return true;
 		}
 	});
-	return false;
+	return false;*/
+
+    let nodesInSelection = 0;
+    let theNode = null;
+
+    state.doc.nodesBetween(state.selection.from, state.selection.to, (node, startPos) => {
+        if (node.type == state.schema.nodes.code_block || node.type != state.schema.nodes.text) {
+            nodesInSelection++;
+            theNode = node;
+        }
+    });
+
+    if (nodesInSelection == 1) {
+
+        if (theNode.type == state.schema.nodes.code_block) {
+            return true;
+        }
+    }
+
+    return false;
+
 }
 
 const codeCollapsePlugin = new Plugin({

@@ -240,17 +240,35 @@ export function buildMenuItems() {
 	if (type = schema.nodes.bullet_list)
 		r.wrapBulletList = wrapListItem(type, {
 			title: "Wrap in bullet list",
-			icon: icons.bulletList
+			icon: icons.bulletList,
+            enable: function enable(state) {
+                return !isCursorInCodeBlock(state) && !isInTable(state);
+            },
+            select: function select(state) {
+                return true;
+            }
 		});
 	if (type = schema.nodes.ordered_list)
 		r.wrapOrderedList = wrapListItem(type, {
 			title: "Wrap in ordered list",
-			icon: icons.orderedList
+			icon: icons.orderedList,
+            enable: function enable(state) {
+                return !isCursorInCodeBlock(state) && !isInTable(state);
+            },
+            select: function select(state) {
+                return true;
+            }
 		});
 	if (type = schema.nodes.blockquote)
 		r.wrapBlockQuote = wrapItem(type, {
 			title: "Wrap in block quote",
-			icon: icons.blockquote
+			icon: icons.blockquote,
+            enable: function enable(state) {
+                return !isCursorInCodeBlock(state) && !isInTable(state);
+            },
+            select: function select(state) {
+                return true;
+            }
 		});
 	if (type = schema.nodes.paragraph)
 		r.makeParagraph = blockTypeItem(type, {
@@ -330,7 +348,7 @@ export function buildMenuItems() {
 
 
     const tableMenuItems = [
-        new MenuItem({ label: "Insert Table", select: function select(state) { return !isInTable(state) && isCursorInCodeBlock(state); }, run: insertTable }),
+        new MenuItem({ label: "Insert Table", enable: function enable(state) { return !isInTable(state) && !isCursorInCodeBlock(state); }, run: insertTable }),
         item("Insert column before", addColumnBefore),
         item("Insert column after", addColumnAfter),
         item("Delete column", deleteColumn),
@@ -347,15 +365,15 @@ export function buildMenuItems() {
         //item("Make cell not-green", setCellAttr("background", null))
     ];
 
-	r.insertMenu = new Dropdown(cut([r.insertImage, r.insertHorizontalRule, r.insertTable]), { label: "Insert" });
+	r.insertMenu = new Dropdown(cut([r.insertImage, r.insertHorizontalRule]), { label: "Insert" });
 	r.typeMenu = new Dropdown(cut([r.makeParagraph, codeMenu1, codeMenu2, codeMenu3, r.makeHead1 && new DropdownSubmenu(cut([
 		r.makeHead1, r.makeHead2, r.makeHead3, r.makeHead4, r.makeHead5, r.makeHead6
 	]), { label: "Heading" })]), { label: "Type..." });
 
-	r.inlineMenu = [cut([r.toggleStrong, r.toggleEm, r.toggleUnderline, r.toggleCode, r.toggleLink])];
-	r.blockMenu = [cut([r.wrapBulletList, r.wrapOrderedList, r.wrapBlockQuote, joinUpItem,
-		liftItem, selectParentNodeItem])];
-	r.fullMenu = r.inlineMenu.concat([[r.insertMenu, r.typeMenu]], [[undoItem, redoItem]], r.blockMenu);
+	r.inlineMenu = [cut([undoItem, redoItem]), cut([r.toggleStrong, r.toggleEm, r.toggleUnderline, r.toggleCode, r.toggleLink])];
+	r.blockMenu = [cut([r.wrapBulletList, r.wrapOrderedList, r.wrapBlockQuote, /*joinUpItem,
+		liftItem,*/ selectParentNodeItem])];
+	r.fullMenu = r.inlineMenu.concat([[r.insertMenu, r.typeMenu]], r.blockMenu);
 
     r.fullMenu.splice(2, 0, [new Dropdown(tableMenuItems, { label: "Table" })]);
 
