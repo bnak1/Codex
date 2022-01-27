@@ -6,7 +6,7 @@ import { wrapInList, splitListItem, liftListItem, sinkListItem } from "prosemirr
 import { undo, redo } from "prosemirror-history";
 import { undoInputRule } from "prosemirror-inputrules";
 
-import { isInTable, goToNextCell } from "prosemirror-tables";
+import { isInTable, goToNextCell, addColumnAfter, addColumnBefore, addRowAfter, addRowBefore } from "prosemirror-tables";
 import { schema } from "./schema";
 
 const mac = typeof navigator != "undefined" ? /Mac/.test(navigator.platform) : false;
@@ -217,6 +217,34 @@ export function buildKeymap(tabSize) {
 		}
 		return false;
 	});
+
+    bind("Mod-ArrowRight", (state, dispatch) => {
+        if (isInTable(state)) {
+            addColumnAfter(state, dispatch);
+            return true;
+        }
+    });
+
+    bind("Mod-ArrowLeft", (state, dispatch) => {
+        if (isInTable(state)) {
+            addColumnBefore(state, dispatch);
+            return true;
+        }
+    });
+
+    bind("Mod-ArrowUp", (state, dispatch) => {
+        if (isInTable(state)) {
+            addRowBefore(state, dispatch);
+            return true;
+        }
+    });
+
+    bind("Mod-ArrowDown", (state, dispatch) => {
+        if (isInTable(state)) {
+            addRowAfter(state, dispatch);
+            return true;
+        }
+    });
 
 	return keys;
 }
