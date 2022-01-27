@@ -1,4 +1,4 @@
-import { MainAPI } from "./preload";
+import { MainAPI } from "../main/preload";
 import * as feather from "feather-icons";
 import validatorEscape from "validator/es/lib/escape";
 import { EditorState } from "prosemirror-state";
@@ -1638,21 +1638,21 @@ export function openFeatherWebsite(): void {
 
 /* IPC Handlers */
 
-api.ipcHandle("updateAvailable", (event, newVersion: string) => {
+api.ipcHandle("updateAvailable", (event: any, newVersion: string) => {
     setTimeout(() => {
         document.getElementById("updateBlockText").textContent = `New update available (${newVersion})`;
         $("#updateBlockLI").fadeIn();
     }, 1000);
 });
 
-api.ipcHandle("console.log", (event, text: string) => {
+api.ipcHandle("console.log", (event: any, text: string) => {
     console.log(text);
 });
 
-api.ipcHandle("console.error", (event, text: string) => {
+api.ipcHandle("console.error", (event: any, text: string) => {
     console.error(text);
 });
 
-api.ipcHandle("prefsShowMenuBar", (event, value: boolean) => {
+api.ipcHandle("prefsShowMenuBar", (event: any, value: boolean) => {
     prefs.showMenuBar = value;
 });

@@ -1,5 +1,5 @@
 module.exports = {
-	entry: "./src/renderer.ts",
+	entry: "./src/renderer/renderer.ts",
 	output: {
 		filename: "renderer.js",
 		libraryTarget: "var",
@@ -13,7 +13,7 @@ module.exports = {
 				use: {
                     loader: "ts-loader",
                     options: {
-                        configFile: "tsconfig.renderer.json"
+                        configFile: "src/renderer/tsconfig.json"
                     }
                 },
 				exclude: /node_modules/,

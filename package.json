@@ -6,8 +6,8 @@
     "repository": "https://github.com/jcv8000/Codex",
     "main": "out/main.js",
     "scripts": {
-        "start": "tsc && npx webpack --mode development && npx electron .",
-        "_dev-main": "tsc --watch",
+        "start": "tsc -p src/main/tsconfig.json && npx webpack --mode development && npx electron .",
+        "_dev-main": "tsc -p src/main/tsconfig.json --watch",
         "_dev-renderer": "webpack --watch --mode development",
         "dev": "npm-run-all -p _dev-main _dev-renderer",
         "serve": "electron .",
