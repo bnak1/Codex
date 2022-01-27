@@ -204,6 +204,12 @@ function init(): void {
         api.fsMkDirSync(prefs.dataDir + "/notes/");
     }
 
+    // Custom user stylesheet
+    if (!api.fsExistsSync(defaultDataDir + "/customStylesheet.css")) {
+        api.fsWriteFileSync(defaultDataDir + "/customStylesheet.css", "/*\n    Enter custom CSS rules for Codex in this file.\n    Use Inspect Element in the DevTools (Ctrl-Shift-I) in Codex to find id's and classes.\n*/");
+    }
+    (document.getElementById("customStylesheetLink") as HTMLLinkElement).href = "file:///" + defaultDataDir + "/customStylesheet.css";
+
     addSidebarLinkEvents();
 
     // Hide context menus on resize, and hide sidebar if window becomes too small
