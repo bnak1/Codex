@@ -443,7 +443,7 @@ ipcMain.on("setNativeThemeSource", (event, value: string) => {
         nativeTheme.themeSource = "dark";
 });
 
-ipcMain.on("maximize", (event) => {
+ipcMain.on("maximize", () => {
     mainWindow.maximize();
 });
 
@@ -451,21 +451,21 @@ ipcMain.on("setMenuBarVisibility", (event, value: boolean) => {
     mainWindow.setMenuBarVisibility(value);
 });
 
-ipcMain.on("restart", (event) => {
+ipcMain.on("restart", () => {
     app.relaunch();
     app.exit();
 });
 
-ipcMain.on("exit", (event) => {
+ipcMain.on("exit", () => {
     app.exit();
 });
 
-ipcMain.on("normalMenu", (event) => {
+ipcMain.on("normalMenu", () => {
     Menu.setApplicationMenu(normalMenu);
 	mainWindow.webContents.send("updateMenubar");
 });
 
-ipcMain.on("editingMenu", (event) => {
+ipcMain.on("editingMenu", () => {
     Menu.setApplicationMenu(editingMenu);
 	mainWindow.webContents.send("updateMenubar");
 });
@@ -489,42 +489,42 @@ ipcMain.on("nativeThemeShouldUseDarkColors", (event) => {
     event.returnValue = nativeTheme.shouldUseDarkColors;
 });
 
-ipcMain.on("openWebsite", (event) => {
+ipcMain.on("openWebsite", () => {
     shell.openExternal("https://www.codexnotes.com/");
 });
 
-ipcMain.on("openDownloadPage", (event) => {
+ipcMain.on("openDownloadPage", () => {
     shell.openExternal("https://www.codexnotes.com/download/");
 });
 
-ipcMain.on("openHelpPage", (event) => {
+ipcMain.on("openHelpPage", () => {
     shell.openExternal("https://www.codexnotes.com/docs/");
 });
 
-ipcMain.on("openUpdatesPage", (event) => {
+ipcMain.on("openUpdatesPage", () => {
     shell.openExternal("https://www.codexnotes.com/updates/");
 });
 
-ipcMain.on("openGithub", (event) => {
+ipcMain.on("openGithub", () => {
     shell.openExternal("https://github.com/jcv8000/Codex");
 });
 
-ipcMain.on("openGithubIssues", (event) => {
+ipcMain.on("openGithubIssues", () => {
     shell.openExternal("https://github.com/jcv8000/Codex/issues");
 });
 
-ipcMain.on("openFeedbackForm", (event) => {
+ipcMain.on("openFeedbackForm", () => {
     shell.openExternal("https://forms.gle/uDLJpqLbNLcEx1F8A");
 });
 
-ipcMain.on("openFeatherWebsite", (event) => {
+ipcMain.on("openFeatherWebsite", () => {
     shell.openExternal("https://www.feathericons.com/");
 });
 
-ipcMain.on("openLicenseWebpage", (event) => {
+ipcMain.on("openLicenseWebpage", () => {
     shell.openExternal("https://creativecommons.org/licenses/by-nc/4.0/");
 });
 
-ipcMain.on("openAboutWindow", (event) => {
+ipcMain.on("openAboutWindow", () => {
     openAboutWindow();
 });
