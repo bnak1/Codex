@@ -4,6 +4,7 @@
     "description": "Codex - Note-taking app for programmers and CS students",
     "homepage": "https://www.codexnotes.com/",
     "repository": "https://github.com/jcv8000/Codex",
+    "private": "true",
     "main": "out/main.js",
     "scripts": {
         "start": "tsc -p src/main/tsconfig.json && npx webpack --mode development && npx electron .",
