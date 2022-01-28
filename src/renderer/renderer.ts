@@ -4,6 +4,7 @@ import validatorEscape from "validator/es/lib/escape";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { prosemirrorSetup, schema } from "./prosemirror";
+import { JsonProperty, Serializable, serialize, deserialize } from "typescript-json-serializer";
 
 /* Expose the variables/functions sent through the preload.ts */
 
@@ -34,31 +35,70 @@ class UserPrefs {
     showMenuBar = true;
 }
 
+@Serializable()
 class Save {
+    @JsonProperty()
     nextPageIndex = 0;
+
+    @JsonProperty()
     notebooks: Notebook[] = [];
 }
 
+@Serializable()
+abstract class SectionOrPage {
+
+    @JsonProperty()
+    id: string;
+
+    @JsonProperty()
+    title: string;
+
+    constructor(title: string, id: string) {
+        this.title = title;
+        this.id = id;
+    }
+}
+
+@Serializable()
 class Notebook {
+
+    @JsonProperty()
+    id: string;
+
+    @JsonProperty()
     name: string;
+
+    @JsonProperty()
     color: string;
+
+    @JsonProperty()
     icon = "book";
-    pages: Page[] = [];
-    constructor(name: string, color: string) {
+
+    @JsonProperty()
+    pages: SectionOrPage[] = [];
+
+    constructor(name: string, id: string, color: string) {
         this.name = name;
+        this.id = id;
         this.color = color;
         this.pages = [];
     }
 }
 
-class Page {
-    title: string;
-    fileName: string;
+@Serializable()
+class Page extends SectionOrPage {
+
+    @JsonProperty()
+    fileName = "";
+
+    @JsonProperty()
     favorite = false;
-    constructor(title: string) {
-        this.title = title;
-        this.fileName = "";
-    }
+}
+
+@Serializable()
+class Section extends SectionOrPage {
+    @JsonProperty()
+    pages: Page[] = [];
 }
 
 
