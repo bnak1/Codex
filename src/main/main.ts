@@ -283,7 +283,7 @@ editingMenu.append(new MenuItem({
         {
             label: "Save Page",
             accelerator: "CmdOrCtrl+S",
-            click: () => executeJavascriptInRenderer("renderer.saveSelectedPage(true)")
+            click: () => executeJavascriptInRenderer("renderer.saveOpenedPage(true)")
         },
         {
             type: "separator"

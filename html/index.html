@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-	<meta http-equiv="Content-Security-Policy" 
-		content="default-src 'self' 'unsafe-inline'; img-src 'self' https://* http://* data: 'unsafe-eval';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' https://* http://* data: 'unsafe-eval';">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Codex</title>
 
@@ -13,7 +12,7 @@
     <link rel="stylesheet" href="../css/prosemirror.css">
     <link rel="stylesheet" href="../node_modules/katex/dist/katex.min.css">
     <link rel="stylesheet" href="../node_modules/@benrbray/prosemirror-math/style/math.css">
-    
+
     <link rel="stylesheet" href="../css/styles.css">
 
 
@@ -39,15 +38,13 @@
                 <div class="sidebar-sticky pt-3">
                     <ul class="nav flex-column unselectable">
                         <li class="nav-item my-sidebar-item">
-                            <a id="homeTab" class="nav-link my-sidebar-link active" href="#" draggable="false"
-                                onclick="renderer.showUIPage('homePage')">
+                            <a id="homeTab" class="nav-link my-sidebar-link active" href="#" draggable="false" onclick="renderer.showUIPage('homePage')">
                                 <span data-feather="home"></span>
                                 Home
                             </a>
                         </li>
                         <li class="nav-item my-sidebar-item">
-                            <a id="settingsTab" class="nav-link my-sidebar-link" href="#" draggable="false"
-                                onclick="renderer.showUIPage('settingsPage')">
+                            <a id="settingsTab" class="nav-link my-sidebar-link" href="#" draggable="false" onclick="renderer.showUIPage('settingsPage')">
                                 <span data-feather="settings"></span>
                                 Settings
                             </a>
@@ -60,8 +57,7 @@
                         </li>
 
                         <li id="updateBlockLI" class="nav-item my-sidebar-item" style="display: none;" title="www.codexnotes.com/download">
-                            <a id="updateBlock" class="nav-link" href="#" draggable="false"
-                                onclick="renderer.openDownloadPage()">
+                            <a id="updateBlock" class="nav-link" href="#" draggable="false" onclick="renderer.openDownloadPage()">
                                 <span data-feather="download" style="color: #269700;"></span>
                                 <span id="updateBlockText">New update available</span>
                             </a>
@@ -82,8 +78,7 @@
                             <h6 class="sidebar-heading text-muted" style="margin-top: 3px">Notebooks</h6>
                         </div>
                         <div class="col-auto" style="padding-right: 16px;">
-                            <a id="newNotebookBtn" class="text-muted" href="#newNotebookModal" draggable="false"
-                                data-toggle="modal" title="New Notebook...">
+                            <a id="newNotebookBtn" class="text-muted" href="#" draggable="false" title="New Notebook...">
                                 <span data-feather="plus-circle"></span>
                             </a>
                         </div>
@@ -91,13 +86,12 @@
                     <ul class="nav flex-column mb-2 unselectable" id="notebookList">
                     </ul>
 
-                    
+
                 </div>
                 <span id="sidebarResizer" class="unselectable"></span>
             </nav>
 
-            <span id="sidebarToggler" class="unselectable" data-feather="chevrons-left" onclick="renderer.toggleSidebar()"
-                title="Toggle Sidebar"></span>
+            <span id="sidebarToggler" class="unselectable" data-feather="chevrons-left" onclick="renderer.toggleSidebar()" title="Toggle Sidebar"></span>
 
             <!-- MAIN CONTAINER -->
             <main id="mainContainer" role="main" class="p-0">
@@ -117,15 +111,15 @@
 
 
 
-                        <div class="alert alert-success mx-auto" role="alert" style="width: 800px; margin-bottom: 30px">
-                            <h2>Thank you for using Codex!</h2>
-                            If you have any issues or feedback for Codex, feel free to email <b>support@codexnotes.com</b>, or
-                            create an Issue/Discussion on the
-                            GitHub repository.
-                            <!--<h2><span data-feather="user-check" style="width: 30px; height: 30px; margin-right: 10px; vertical-align: -4px;"></span>Optional Feedback Survey</h2>
+                    <div class="alert alert-success mx-auto" role="alert" style="width: 800px; margin-bottom: 30px">
+                        <h2>Thank you for using Codex!</h2>
+                        If you have any issues or feedback for Codex, feel free to email <b>support@codexnotes.com</b>, or
+                        create an Issue/Discussion on the
+                        GitHub repository.
+                        <!--<h2><span data-feather="user-check" style="width: 30px; height: 30px; margin-right: 10px; vertical-align: -4px;"></span>Optional Feedback Survey</h2>
                             If you would like to share your opinion or give any suggestions, please submit this survey (hosted by Google Forms).
                             <button class="mybtn mt-2" onclick="shell.openExternal('https://forms.gle/uDLJpqLbNLcEx1F8A')" title="https://forms.gle/uDLJpqLbNLcEx1F8A">Take Survey</button>-->
-                        </div>
+                    </div>
 
 
                     <div class="container">
@@ -135,7 +129,7 @@
                                     <h3>Favorites</h3>
                                 </center>
                                 <div id="favoritesContainer" class="py-3">
-        
+
                                 </div>
                             </div>
                             <div class="col px-5">
@@ -212,10 +206,8 @@
                         </div>
                         <div class="form-group">
                             <h5 class="settingTitle">Accent color</h5>
-                            <input class="form-control" type="color" id="accentColorPicker"
-                                onchange="renderer.applyPrefsRuntime()" style="display: inline; width: 58px; height: 48px" title="Choose color...">
-                            <button class="btn mybtn" style="vertical-align: 7px; margin-left: 10px"
-                                onclick="renderer.revertAccentColor()">Revert to default</button>
+                            <input class="form-control" type="color" id="accentColorPicker" onchange="renderer.applyPrefsRuntime()" style="display: inline; width: 58px; height: 48px" title="Choose color...">
+                            <button class="btn mybtn" style="vertical-align: 7px; margin-left: 10px" onclick="renderer.revertAccentColor()">Revert to default</button>
                         </div>
 
                         <center>
@@ -228,13 +220,11 @@
 
 
                             <center>
-                                <div id="exampleCode" class="codeSnippet hljs" data-params="cpp"
-                                    style="font-size:14px; width: 100%; text-align: left; tab-size: 4; position: relative"></div>
+                                <div id="exampleCode" class="codeSnippet hljs" data-params="cpp" style="font-size:14px; width: 100%; text-align: left; tab-size: 4; position: relative"></div>
                             </center>
 
 
-                            <select class="form-control custom-select" id="codeStyleSelect"
-                                onchange="renderer.applyPrefsRuntime()">
+                            <select class="form-control custom-select" id="codeStyleSelect" onchange="renderer.applyPrefsRuntime()">
                                 <optgroup label="Light themes">
                                     <option value="a11y-light">A 11 Y Light</option>
                                     <option value="arduino-light">Arduino Light</option>
@@ -344,8 +334,7 @@
                         <div class="form-group">
                             <h5 class="settingTitle">Language Overlay</h5>
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="showLanguageOverlayCheck"
-                                    onchange="renderer.applyPrefsRuntime()">
+                                <input type="checkbox" class="custom-control-input" id="showLanguageOverlayCheck" onchange="renderer.applyPrefsRuntime()">
                                 <label class="custom-control-label" for="showLanguageOverlayCheck">Show the language name at the top-right of code blocks</label>
                             </div>
                         </div>
@@ -353,8 +342,7 @@
                         <div class="form-group">
                             <h5 class="settingTitle">Preferred Tab Size</h5>
                             <!--<label for="tabSizeSelect">Preferred tab size</label>-->
-                            <select class="form-control custom-select" id="tabSizeSelect"
-                                onchange="renderer.applyPrefsRuntime()">
+                            <select class="form-control custom-select" id="tabSizeSelect" onchange="renderer.applyPrefsRuntime()">
                                 <option value="2">2 spaces</option>
                                 <option value="4">4 spaces</option>
                             </select>
@@ -363,8 +351,7 @@
                         <div class="form-group">
                             <h5 class="settingTitle">Word Wrap</h5>
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="codeWordWrapCheck"
-                                    onchange="renderer.applyPrefsRuntime()">
+                                <input type="checkbox" class="custom-control-input" id="codeWordWrapCheck" onchange="renderer.applyPrefsRuntime()">
                                 <label class="custom-control-label" for="codeWordWrapCheck">Enable word wrap in code blocks</label>
                             </div>
                         </div>
@@ -385,8 +372,7 @@
               -->
 
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="exportBreakPageOnH1Check"
-                                    onchange="renderer.applyPrefsRuntime()">
+                                <input type="checkbox" class="custom-control-input" id="exportBreakPageOnH1Check" onchange="renderer.applyPrefsRuntime()">
                                 <label class="custom-control-label" for="exportBreakPageOnH1Check">Break page before
                                     Level 1
                                     Headings</label>
@@ -404,8 +390,7 @@
                         <div class="form-group">
                             <h5 class="settingTitle">Exporting to PDF/Markdown</h5>
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="openPDFonExportCheck"
-                                    onchange="renderer.applyPrefsRuntime()">
+                                <input type="checkbox" class="custom-control-input" id="openPDFonExportCheck" onchange="renderer.applyPrefsRuntime()">
                                 <label class="custom-control-label" for="openPDFonExportCheck">Open the created file
                                     after
                                     exporting</label>
@@ -422,18 +407,12 @@
                             <h5 class="settingTitle">Save Location</h5>
                             <div class="input-group">
                                 <!--<input type="text" id="dataDirInput" class="form-control" spellcheck="false" readonly onclick="openDataDir()">-->
-                                <div class="form-control" readonly><a href="#" onclick="renderer.openDataDir()" id="dataDirInput"
-                                        style="font-size: 14px; vertical-align: 1px;"></a></div>
+                                <div class="form-control" readonly><a href="#" onclick="renderer.openDataDir()" id="dataDirInput" style="font-size: 14px; vertical-align: 1px;"></a></div>
                                 <div class="input-group-append" id="revertToDefaultDataDirBtnTooltip">
-                                    <button id="revertToDefaultDataDirBtn" onclick="renderer.revertToDefaultDataDir()"
-                                        class="btn mybtn-primary" type="button"
-                                        style="padding-left: 12px; padding-right: 12px" title=""><span
-                                            data-feather="rotate-ccw"></span></button>
+                                    <button id="revertToDefaultDataDirBtn" onclick="renderer.revertToDefaultDataDir()" class="btn mybtn-primary" type="button" style="padding-left: 12px; padding-right: 12px" title=""><span data-feather="rotate-ccw"></span></button>
                                 </div>
                                 <div class="input-group-append">
-                                    <button onclick="renderer.DataDirDialog();" id="dataDirButton" class="btn mybtn-primary"
-                                        type="button" style="padding-left: 12px; padding-right: 12px"
-                                        title="Change save directory"><span data-feather="folder"></span></button>
+                                    <button onclick="renderer.DataDirDialog();" id="dataDirButton" class="btn mybtn-primary" type="button" style="padding-left: 12px; padding-right: 12px" title="Change save directory"><span data-feather="folder"></span></button>
                                 </div>
                             </div>
                             <br>
@@ -448,8 +427,7 @@
                                     <b><code>save.json</code></b> file and <b><code>notes</code></b> folder from the old
                                     location to the
                                     new location to see your notes.<br>
-                                    <hr>This can be used for cloud syncing your notes, check <a href="#"
-                                        onclick="renderer._loadCloudSyncPage()">here</a> for a tutorial.
+                                    <hr>This can be used for cloud syncing your notes, check <a href="#" onclick="renderer._loadCloudSyncPage()">here</a> for a tutorial.
                                 </i>
                             </div>
                         </div>
@@ -457,9 +435,9 @@
                         <div class="form-group mb-0">
                             <h5 class="settingTitle">Unused Files</h5>
                             <p>When you delete a notebook/page in Codex, the actual files that hold the pages' content stays in the <b><code>notes</code></b> folder in case you need to get it back.<br><br>
-                            Don't worry about this unless you have extremely large notes with embedded images and you need extra space. Most note files are less than 1 MB in size.<br><br>
-                            This button deletes all files that are currently unused by your notebooks.</p>
-                            
+                                Don't worry about this unless you have extremely large notes with embedded images and you need extra space. Most note files are less than 1 MB in size.<br><br>
+                                This button deletes all files that are currently unused by your notebooks.</p>
+
                             <center><button class="btn mybtn-danger" onclick="renderer.deleteOldPages()">Purge unused files</button></center>
                         </div>
                     </div>
@@ -491,13 +469,13 @@
         </span>
     </span>
 
-    <!-- NEW NOTEBOOK MODAL -->
-    <div class="modal fade unselectable" id="newNotebookModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- NEW ITEM MODAL -->
+    <div class="modal fade unselectable" id="newItemModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content shadow-lg">
-                <form id="newNotebookForm">
+                <form id="newItemForm">
                     <div class="modal-header">
-                        <h5 class="modal-title">New Notebook</h5>
+                        <h5 class="modal-title" id="newItemFormTitle">New Item</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -505,25 +483,23 @@
                     <div class="modal-body">
                         <label class="form-label">Icon:</label>
                         <div class="form-row mb-3">
-                            
+
                             <div class="col-auto">
-                                <span id="newNotebookIconPreview" data-feather="book" style="width: 32px; height: 32px; vertical-align: -19px; color: black;"></span>
+                                <span id="newItemIconPreview" data-feather="book" style="width: 32px; height: 32px; vertical-align: -19px; color: black;"></span>
                             </div>
                             <div class="col">
-                                <select id="newNotebookIconSelect" class="form-control"></select>
+                                <select id="newItemIconSelect" class="form-control"></select>
                             </div>
                             <div class="col-auto">
-                                <input class="form-control" type="color" style="width: 50px" id="newNotebookColorPicker"
-                                    title="Choose color...">
+                                <input class="form-control" type="color" style="width: 50px" id="newItemColorPicker" title="Choose color...">
                             </div>
                             <div class="col-auto">
-                                <span id="newNotebookIconHelp" data-feather="help-circle" href="#" onclick="renderer.openFeatherWebsite()" style="color: #9AA6B3; width: 24px; height: 24px; vertical-align: -15px; cursor: pointer;" title="View all icons at feathericons.com"></span>
+                                <span id="newItemIconHelp" data-feather="help-circle" href="#" onclick="renderer.openFeatherWebsite()" style="color: #9AA6B3; width: 24px; height: 24px; vertical-align: -15px; cursor: pointer;" title="View all icons at feathericons.com"></span>
                             </div>
                         </div>
-                        <label class="form-label" for="newNotebookNameInput">Name:</label>
+                        <label class="form-label" for="newItemNameInput">Name:</label>
                         <div class="form-row">
-                            <input class="form-control" type="text" id="newNotebookNameInput"
-                                placeholder="New notebook name...">
+                            <input class="form-control" type="text" id="newItemNameInput">
                             <div class="invalid-feedback">
                                 Please enter a valid name.
                             </div>
@@ -531,48 +507,45 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="mybtn" data-dismiss="modal">Cancel</button>
-                        <input type="submit" class="mybtn-primary" id="createNotebookButton" value="Create">
+                        <input type="submit" class="mybtn-primary" id="newItemSubmitButton" value="Create">
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <!-- NEW NOTEBOOK MODAL -->
+    <!-- NEW ITEM MODAL -->
 
-    <!-- EDIT NOTEBOOK MODAL -->
-    <div class="modal fade unselectable" id="editNotebookModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- EDIT ITEM MODAL -->
+    <div class="modal fade unselectable" id="editItemModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content shadow-lg">
-                <form id="editNotebookForm">
+                <form id="editItemForm">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit Notebook</h5>
+                        <h5 class="modal-title" id="editItemFormTitle">Edit Item</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
-
                         <label class="form-label">Icon:</label>
                         <div class="form-row mb-3">
-                            
+
                             <div class="col-auto">
-                                <span id="editNotebookIconPreview" data-feather="book" style="width: 32px; height: 32px; vertical-align: -19px; color: black;"></span>
+                                <span id="editItemIconPreview" data-feather="book" style="width: 32px; height: 32px; vertical-align: -19px;"></span>
                             </div>
                             <div class="col">
-                                <select id="editNotebookIconSelect" class="form-control"></select>
+                                <select id="editItemIconSelect" class="form-control"></select>
                             </div>
                             <div class="col-auto">
-                                <input class="form-control" type="color" style="width: 50px" id="editNotebookColorPicker"
-                                    title="Choose color...">
+                                <input class="form-control" type="color" style="width: 50px" id="editItemColorPicker" title="Choose color...">
                             </div>
                             <div class="col-auto">
-                                <span id="editNotebookIconHelp" data-feather="help-circle" href="#" onclick="renderer.openFeatherWebsite()" style="color: #9AA6B3; width: 24px; height: 24px; vertical-align: -15px; cursor: pointer;" title="View all icons at feathericons.com"></span>
+                                <span id="editItemIconHelp" data-feather="help-circle" href="#" onclick="renderer.openFeatherWebsite()" style="color: #9AA6B3; width: 24px; height: 24px; vertical-align: -15px; cursor: pointer;" title="View all icons at feathericons.com"></span>
                             </div>
                         </div>
-                        <label class="form-label" for="newNotebookNameInput">Name:</label>
+                        <label class="form-label" for="editItemNameInput">Name:</label>
                         <div class="form-row">
-                            <input class="form-control" type="text" id="editNotebookNameInput"
-                                placeholder="New notebook name...">
+                            <input class="form-control" type="text" id="editItemNameInput">
                             <div class="invalid-feedback">
                                 Please enter a valid name.
                             </div>
@@ -580,96 +553,24 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="mybtn" data-dismiss="modal">Cancel</button>
-                        <input type="submit" class="mybtn-primary" value="Save">
+                        <input type="submit" class="mybtn-primary" id="editItemSubmitButton" value="Save">
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <!-- EDIT NOTEBOOK MODAL -->
+    <!-- EDIT ITEM MODAL -->
 
-    <!-- DELETE NOTEBOOK MODAL -->
-    <div class="modal fade unselectable" id="deleteNotebookModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- DELETE ITEM MODAL -->
+    <div class="modal fade unselectable" id="deleteItemModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content shadow-lg">
                 <div class="modal-body">
-                    <h6>Are you sure you want to delete this notebook?</h6>
+                    <p id="deleteItemModalTitle">Are you sure you want to delete this item?</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="mybtn" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="mybtn-danger" id="deleteNotebookButton"
-                        onclick="renderer.deleteSelectedNotebook(); $('#deleteNotebookModal').modal('hide');">Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- NEW PAGE MODAL -->
-    <div class="modal fade unselectable" id="newPageModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content shadow-lg">
-                <form id="newPageForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">New Page</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input class="form-control" type="text" id="newPageNameInput" placeholder="New page name...">
-                        <div class="invalid-feedback">
-                            Please enter a valid name.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="mybtn" data-dismiss="modal">Cancel</button>
-                        <input type="submit" class="mybtn-primary" value="Create">
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- NEW PAGE MODAL -->
-
-    <!-- EDIT PAGE MODAL -->
-    <div class="modal fade unselectable" id="editPageModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content shadow-lg">
-                <form id="editPageForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Rename Page</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input class="form-control" type="text" id="editPageNameInput" placeholder="New page name...">
-                        <div class="invalid-feedback">
-                            Please enter a valid name.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="mybtn" data-dismiss="modal">Cancel</button>
-                        <input type="submit" class="mybtn-primary" id="editPageButton" value="Rename">
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- EDIT PAGE MODAL -->
-
-    <!-- DELETE PAGE MODAL -->
-    <div class="modal fade unselectable" id="deletePageModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content shadow-lg">
-                <div class="modal-body">
-                    <h6>Are you sure you want to delete this page?</h6>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="mybtn" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="mybtn-danger" id="deletePageButton"
-                        onclick="renderer.deleteSelectedPage(); $('#deletePageModal').modal('hide');">Delete</button>
+                    <button type="button" class="mybtn-danger" id="deleteItemButton">Delete</button>
                 </div>
             </div>
         </div>
@@ -677,32 +578,37 @@
 
     <!-- NOTEBOOK CONTEXT MENU -->
     <div class="dropdown-menu shadow m-0 unselectable" id="notebook-context-menu" style="position: fixed">
-        <a class="dropdown-item" href="#newPageModal" data-toggle="modal"><span data-feather="copy"
-                class="context-menu-glyph"></span>New Page</a>
-        <a class="dropdown-item" href="#" onclick="renderer.editSelectedNotebook()"><span data-feather="edit"
-                class="context-menu-glyph"></span>Edit Notebook</a>
+        <a id="NBCM-newPage" class="dropdown-item" href="#"><span data-feather="file-plus" class="context-menu-glyph"></span>New Page</a>
+        <a id="NBCM-newSection" class="dropdown-item" href="#"><span data-feather="folder-plus" class="context-menu-glyph"></span>New Section</a>
         <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="#" onclick="renderer.openExportNotebookModal()"><span data-feather="external-link"
-            class="context-menu-glyph"></span>Export all pages...</a>
+        <a id="NBCM-editNotebook" class="dropdown-item" href="#"><span data-feather="edit" class="context-menu-glyph"></span>Edit Notebook</a>
         <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="#deleteNotebookModal" data-toggle="modal" style="color: red"><span
-                data-feather="trash-2" class="context-menu-glyph"></span>Delete notebook</a>
+        <a id="NBCM-exportAllPages" class="dropdown-item" href="#"><span data-feather="external-link" class="context-menu-glyph"></span>Export All Pages</a>
+        <div class="dropdown-divider"></div>
+        <a id="NBCM-deleteNotebook" class="dropdown-item" href="#" style="color: red"><span data-feather="trash-2" class="context-menu-glyph"></span>Delete Notebook</a>
+    </div>
+
+    <!-- SECTION CONTEXT MENU -->
+    <div class="dropdown-menu shadow m-0 unselectable" id="section-context-menu" style="position: fixed">
+        <a id="SCM-newPage" class="dropdown-item" href="#"><span data-feather="file-plus" class="context-menu-glyph"></span>New Page</a>
+        <a id="SCM-newSection" class="dropdown-item" href="#"><span data-feather="folder-plus" class="context-menu-glyph"></span>New Section</a>
+        <div class="dropdown-divider"></div>
+        <a id="SCM-editSection" class="dropdown-item" href="#"><span data-feather="edit" class="context-menu-glyph"></span>Edit Section</a>
+        <div class="dropdown-divider"></div>
+        <a id="SCM-exportAllPages" class="dropdown-item" href="#"><span data-feather="external-link" class="context-menu-glyph"></span>Export All Pages</a>
+        <div class="dropdown-divider"></div>
+        <a id="SCM-deleteSection" class="dropdown-item" href="#" style="color: red"><span data-feather="trash-2" class="context-menu-glyph"></span>Delete Section</a>
     </div>
 
     <!-- PAGE CONTEXT MENU -->
     <div class="dropdown-menu shadow m-0 unselectable" id="page-context-menu" style="position: fixed">
-        <a class="dropdown-item" href="#" onclick="renderer.editSelectedPage()"><span data-feather="edit"
-                class="context-menu-glyph"></span>Rename page</a>
-        <a class="dropdown-item" href="#" onclick="renderer.toggleFavoritePage()"><span data-feather="star"
-                class="context-menu-glyph"></span><span id="FavoritePageLink">Favorite page</span></a>
+        <a id="PCM-editPage" class="dropdown-item" href="#"><span data-feather="edit" class="context-menu-glyph"></span>Edit Page</a>
+        <a id="PCM-favoritePage" class="dropdown-item" href="#"><span data-feather="star" class="context-menu-glyph"></span><span id="FavoritePageLink">Favorite Page</span></a>
         <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="#" onclick="renderer.printRightClickedPage()"><span data-feather="external-link"
-            class="context-menu-glyph"></span>Export to PDF</a>
-        <a class="dropdown-item" href="#" onclick="renderer.exportRightClickedPageToMarkdown()"><span data-feather="hash"
-            class="context-menu-glyph"></span>Export to Markdown</a>
+        <a id="PCM-exportPDF" class="dropdown-item" href="#"><span data-feather="external-link" class="context-menu-glyph"></span>Export to PDF</a>
+        <a id="PCM-exportMD" class="dropdown-item" href="#"><span data-feather="hash" class="context-menu-glyph"></span>Export to Markdown</a>
         <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="#deletePageModal" data-toggle="modal" style="color: red"><span
-                data-feather="trash-2" class="context-menu-glyph"></span>Delete page</a>
+        <a id="PCM-deletePage" class="dropdown-item" href="#" style="color: red"><span data-feather="trash-2" class="context-menu-glyph"></span>Delete Page</a>
     </div>
 
 
@@ -723,8 +629,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="mybtn" onclick="renderer.prefs.firstUse = false;" data-dismiss="modal">No thanks</button>
-                    <button type="button" class="mybtn-primary" data-dismiss="modal"
-                        onclick="renderer.autoOpenHelpTab(); renderer.prefs.firstUse = false;">Continue</button>
+                    <button type="button" class="mybtn-primary" data-dismiss="modal" onclick="renderer.autoOpenHelpTab(); renderer.prefs.firstUse = false;">Continue</button>
                 </div>
             </div>
         </div>
@@ -732,8 +637,8 @@
     <!-- NEW USER POPUP -->
 
 
-    <!-- EXPORT NOTEBOOK MODAL -->
-    <div class="modal fade unselectable" id="exportNotebookModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- EXPORT NOTEBOOK/SECTION MODAL -->
+    <div class="modal fade unselectable" id="exportModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 700px;">
             <div class="modal-content shadow-lg">
                 <div class="modal-header">
@@ -744,9 +649,9 @@
                 </div>
                 <div class="modal-body">
                     <center>
-                        <span id="exportNotebookModalIcon" data-feather="book" style="width: 32px; height: 32px; vertical-align: -12px;"></span>
-                        <span id="exportNotebookModalTitle" class="ml-2" style="font-size: 16px; font-weight: 500;"></span>
-                        <span id="exportNotebookModalPageCount"></span>
+                        <span id="exportModalModalIcon" data-feather="book" style="width: 32px; height: 32px; vertical-align: -12px;"></span>
+                        <span id="exportModalModalTitle" class="ml-2" style="font-size: 16px; font-weight: 500;"></span>
+                        <span id="exportModalModalPageCount"></span>
                     </center>
                     <hr>
                     <div class="mb-3">
@@ -755,32 +660,32 @@
                     </div>
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
-                            <button class="btn mybtn-primary" onclick="renderer.exportNotebookDirDialog()" style="padding: 0px 10px; font-size: 13px;">Choose Location</button>
+                            <button class="btn mybtn-primary" onclick="renderer.exportModalDirDialog()" style="padding: 0px 10px; font-size: 13px;">Choose Location</button>
                         </div>
                         <div class="form-control">
                             <span id="exportNodebookLocation" style="font-size: 13px;">No location set</span>
                         </div>
                     </div>
                     <div class="form-group mx-0 my-3">
-                        <label for="exportNotebookFileTypeSelect">Export type</label>
-                        <select id="exportNotebookFileTypeSelect" class="form-control custom-select">
+                        <label for="exportModalFileTypeSelect">Export type</label>
+                        <select id="exportModalFileTypeSelect" class="form-control custom-select">
                             <option value="PDF">PDF</option>
                             <option value="MD">Markdown</option>
                         </select>
                     </div>
-                    <div class="mt-5 mb-2" id="exportNotebookProgressSection" style="display: none;">
+                    <div class="mt-5 mb-2" id="exportModalProgressSection" style="display: none;">
                         <div class="progress mb-1">
-                            <div id="exportNotebookProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                            <div id="exportModalProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
                         </div>
                         <center>
-                            <span id="exportNotebookProgressText"></span>
+                            <span id="exportModalProgressText"></span>
                         </center>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn mybtn" id="exportNotebookCancelButton" onclick="renderer.closeExportNotebookModal()">Cancel</button>
-                    <button type="button" class="btn mybtn-primary" id="exportNotebookButton" disabled="true" onclick="renderer.exportNotebookPages()">Export</button>
-                    <button type="button" class="btn mybtn" id="exportNotebookCloseButton" onclick="renderer.closeExportNotebookModal()" style="display: none;">Close</button>
+                    <button type="button" class="btn mybtn" id="exportModalCancelButton" onclick="renderer.closeexportModalModal()">Cancel</button>
+                    <button type="button" class="btn mybtn-primary" id="exportModalButton" disabled="true" onclick="renderer.exportModalPages()">Export</button>
+                    <button type="button" class="btn mybtn" id="exportModalCloseButton" onclick="renderer.closeexportModalModal()" style="display: none;">Close</button>
                 </div>
             </div>
         </div>
