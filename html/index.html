@@ -50,10 +50,82 @@
                             </a>
                         </li>
                         <li class="nav-item my-sidebar-item">
-                            <a id="helpTab" class="nav-link" href="#" draggable="false" onclick="renderer.openHelpPage()">
-                                <span data-feather="help-circle"></span>
-                                Help
+                            <a id="helpTab" class="nav-link" href="#helpList" data-toggle="collapse" aria-expanded="false" draggable="false"">
+                                <div class="row">
+                                    <div class="col-auto pr-0">
+                                        <span data-feather="menu"></span>
+                                    </div>
+                                    <div class="col pr-1"
+                                        style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                        More
+                                    </div>
+                                    <div class="col-auto" style="padding-right: 20px">
+                                        <span class="caret"></span>
+                                    </div>
+                                </div>
                             </a>
+                            <ul class="nav collapse" id="helpList">
+                                <li class="nav-item my-sidebar-item">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openHelpPage()" title="https://www.codexnotes.com/docs">
+                                        <div class="row">
+                                            <div class="col-auto pr-0"><span data-feather="help-circle"></span></div>
+                                            <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                Help/Docs
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="nav-item my-sidebar-item">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openWebsite()" title="https://www.codexnotes.com">
+                                        <div class="row">
+                                            <div class="col-auto pr-0"><span data-feather="globe"></span></div>
+                                            <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                Website
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="nav-item my-sidebar-item">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openUpdatesPage()" title="https://www.codexnotes.com/updates">
+                                        <div class="row">
+                                            <div class="col-auto pr-0"><span data-feather="file-plus"></span></div>
+                                            <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                Changelogs
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="nav-item my-sidebar-item">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openGithub()" title="https://github.com/jcv8000/Codex">
+                                        <div class="row">
+                                            <div class="col-auto pr-0"><span data-feather="github"></span></div>
+                                            <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                GitHub Repo
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="nav-item my-sidebar-item">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openGithubIssues()" title="https://github.com/jcv8000/Codex/issues">
+                                        <div class="row">
+                                            <div class="col-auto pr-0"><span data-feather="alert-circle"></span></div>
+                                            <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                Issues/Bug Reports
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="nav-item my-sidebar-item">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openFeedbackForm()" title="https://forms.gle/uDLJpqLbNLcEx1F8A">
+                                        <div class="row">
+                                            <div class="col-auto pr-0"><span data-feather="thumbs-up"></span></div>
+                                            <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                Give Feedback (Google Forms)
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
 
                         <li id="updateBlockLI" class="nav-item my-sidebar-item" style="display: none;" title="www.codexnotes.com/download">
@@ -83,8 +155,8 @@
                             </a>
                         </div>
                     </div>
-                    <ul class="nav flex-column mb-2 unselectable" id="notebookList">
-                    </ul>
+
+                    <ul class="nav flex-column mb-2 unselectable" id="notebookList"></ul>
 
 
                 </div>
@@ -123,66 +195,11 @@
 
 
                     <div class="container">
-                        <div class="row">
-                            <div class="col px-5">
-                                <center>
-                                    <h3>Favorites</h3>
-                                </center>
-                                <div id="favoritesContainer" class="py-3">
+                        <center>
+                            <h3>Favorites</h3>
+                        </center>
+                        <div id="favoritesContainer" class="py-3">
 
-                                </div>
-                            </div>
-                            <div class="col px-5">
-                                <center>
-                                    <h3>More</h3>
-                                </center>
-                                <div class="py-3">
-                                    <a class="favoriteBlock shadow-sm" onclick="renderer.openWebsite()">
-                                        <div class="row" style="width: 100%">
-                                            <div class="col-auto">
-                                                <span data-feather="globe" style="width: 32px; height: 32px;"></span>
-                                            </div>
-                                            <div class="col" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-weight: 500; vertical-align: middle; line-height: 34px;">Website</div>
-                                        </div>
-                                    </a>
-
-                                    <a class="favoriteBlock shadow-sm" onclick="renderer.openUpdatesPage()">
-                                        <div class="row" style="width: 100%">
-                                            <div class="col-auto">
-                                                <span data-feather="file-plus" style="width: 32px; height: 32px;"></span>
-                                            </div>
-                                            <div class="col" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-weight: 500; vertical-align: middle; line-height: 34px;">Changelog</div>
-                                        </div>
-                                    </a>
-
-                                    <a class="favoriteBlock shadow-sm" onclick="renderer.autoOpenHelpTab()">
-                                        <div class="row" style="width: 100%">
-                                            <div class="col-auto">
-                                                <span data-feather="help-circle" style="width: 32px; height: 32px;"></span>
-                                            </div>
-                                            <div class="col" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-weight: 500; vertical-align: middle; line-height: 34px;">Help</div>
-                                        </div>
-                                    </a>
-
-                                    <a class="favoriteBlock shadow-sm" onclick="renderer.openGithub()">
-                                        <div class="row" style="width: 100%">
-                                            <div class="col-auto">
-                                                <span data-feather="github" style="width: 32px; height: 32px;"></span>
-                                            </div>
-                                            <div class="col" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-weight: 500; vertical-align: middle; line-height: 34px;">GitHub Repository</div>
-                                        </div>
-                                    </a>
-
-                                    <a class="favoriteBlock shadow-sm" onclick="renderer.openGithubIssues()">
-                                        <div class="row" style="width: 100%">
-                                            <div class="col-auto">
-                                                <span data-feather="alert-circle" style="width: 32px; height: 32px;"></span>
-                                            </div>
-                                            <div class="col" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-weight: 500; vertical-align: middle; line-height: 34px;">GitHub Issues</div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
