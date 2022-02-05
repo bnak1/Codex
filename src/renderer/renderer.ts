@@ -7,7 +7,7 @@ import { prosemirrorSetup, schema } from "./prosemirror";
 import { JsonProperty, Serializable, deserialize } from "typescript-json-serializer";
 import { v4 as GenerateUUID } from "uuid";
 
-/* Expose the variables/functions sent through the preload.ts */
+// #region Expose the variables/functions sent through the preload.ts
 
 type BridgedWindow = Window & typeof globalThis & {
     mainAPI: any
@@ -15,7 +15,9 @@ type BridgedWindow = Window & typeof globalThis & {
 
 const api: MainAPI = (window as BridgedWindow).mainAPI.api;
 
-/* Type definitions */
+// #endregion
+
+// #region TYPE DEFINITIONS
 
 class UserPrefs {
     theme = 0;
@@ -156,14 +158,14 @@ class Save {
     version = "2.0.0";
 }
 
-/* Global variables */
+// #endregion
 
-// TODO remove this decorator later
-/* eslint-disable prefer-const */
+// #region GLOBAL VARIABLES
+
 let darkStyleLink: HTMLLinkElement;
 
 let save: Save;
-let idToObjectMap = new Map<string, NotebookItem>();
+const idToObjectMap = new Map<string, NotebookItem>();
 
 export let prefs: UserPrefs;
 
@@ -184,34 +186,10 @@ let zoomLevel = 1.000;
 let sidebarWidth = 275;
 
 const lightThemes = [ "a11y-light", "arduino-light", "ascetic", "atelier-cave-light", "atelier-dune-light", "atelier-estuary-light", "atelier-forest-light", "atelier-heath-light", "atelier-lakeside-light", "atelier-plateau-light", "atelier-savanna-light", "atelier-seaside-light", "atelier-sulphurpool-light", "atom-one-light", "color-brewer", "default", "docco", "foundation", "github-gist", "github", "font-weight: bold;", "googlecode", "grayscale", "gruvbox-light", "idea", "isbl-editor-light", "kimbie.light", "lightfair", "magula", "mono-blue", "nnfx", "paraiso-light", "purebasic", "qtcreator_light", "routeros", "solarized-light", "tomorrow", "vs", "xcode" ];
-//const darkThemes = [ "a11y-dark", "agate", "androidstudio", "an-old-hope", "arta", "atelier-cave-dark", "atelier-dune-dark", "atelier-estuary-dark", "atelier-forest-dark", "atelier-heath-dark", "atelier-lakeside-dark", "atelier-plateau-dark", "atelier-savanna-dark", "atelier-seaside-dark", "atelier-sulphurpool-dark", "atom-one-dark-reasonable", "atom-one-dark", "font-weight: bold;", "codepen-embed", "darcula", "dark", "dracula", "far", "gml", "gradient-dark", "gruvbox-dark", "hopscotch", "hybrid", "ir-black", "isbl-editor-dark", "kimbie.dark", "lioshi", "monokai-sublime", "monokai", "night-owl", "nnfx-dark", "nord", "ocean", "obsidian", "paraiso-dark", "pojoaque", "qtcreator_dark", "railscasts", "rainbow", "shades-of-purple", "solarized-dark", "srcery", "sunburst", "tomorrow-night-blue", "tomorrow-night-bright", "tomorrow-night-eighties", "tomorrow-night", "vs2015", "xt256", "zenburn" ];
-/* eslint-enable prefer-const */
 
+// #endregion
 
-
-/* Initialization */
-
-// window.onbeforeunload = (e) => {
-
-
-//     //cache which notebooks are opened
-//     prefs.openedNotebooks = [];
-
-
-//     if (destroyOpenedNotebooks == false) {
-//         for (let i = 0; i < save.notebooks.length; i++) {
-
-//             const nbList = document.getElementById(`nb-${i}-list`);
-//             if (nbList.classList.contains("show")) {
-//                 prefs.openedNotebooks[prefs.openedNotebooks.length] = i;
-//             }
-//         }
-//     }
-
-
-//     saveData();
-//     savePrefs();
-// };
+// #region INITIALIZATION
 
 function init(): void {
 
@@ -373,20 +351,6 @@ function init(): void {
 
     processNotebooks();
 
-    // open the notebooks which were open before
-    /*for (let i = 0; i < prefs.openedNotebooks.length; i++) {
-        try {
-            const nbList = document.getElementById(`nb-${prefs.openedNotebooks[i]}-list`);
-            nbList.classList.add("show");
-            document.getElementById(`nb-${prefs.openedNotebooks[i]}`).setAttribute("aria-expanded", "true");
-        }
-        catch (error) {
-            console.error(error);
-            errorPopup("Error while trying to load notebooks.", "Check the developer console for more information.");
-        }
-    }*/
-
-
     // TOOLTIPS
 
     document.getElementById("revertToDefaultDataDirBtnTooltip").title = "Revert to" + defaultDataDir;
@@ -495,7 +459,9 @@ function init(): void {
 
 init();
 
-/* Functions */
+// #endregion
+
+// #region LOGIC FUNCTIONS
 
 export function fixPrefs(): void {
 
@@ -790,8 +756,7 @@ export function saveData(): void {
     if (canSaveData) {
         try {
             api.fsWriteFileSync(prefs.dataDir + "/save.json", JSON.stringify(save, null, 4));
-            //TODO
-            //saveSelectedPage();
+            saveOpenedPage();
         }
         catch (err) {
             console.error(err);
@@ -875,8 +840,7 @@ export function updateZoom(): void {
     const oldScrollTop = mainContainer.scrollTop;
     const oldScrollHeight = mainContainer.scrollHeight;
 
-    // The zoom variable is not part of any standard but seems to work how
-    // how I want it to for now
+    // The zoom variable is not part of any standard but seems to work how I want it to for now
     // @ts-ignore
     ec.style.zoom = `${zoomLevel}`;
 
@@ -1168,6 +1132,9 @@ function convertOldSave(oldSave: any): Save {
     return newSave;
 }
 
+// #endregion
+
+// #region DOM EVENT HANDLERS
 
 document.getElementById("newNotebookBtn").addEventListener("click", () => {
     createNewItemMode = NotebookItemType.NOTEBOOK;
@@ -1177,8 +1144,7 @@ document.getElementById("newNotebookBtn").addEventListener("click", () => {
 });
 
 
-
-/* NEW ITEM MODAL */
+// NEW ITEM MODAL
 document.getElementById("newItemForm").addEventListener("submit", (e) => {
     e.preventDefault(); // Prevents the page from trying to send the data to a url
 
@@ -1246,7 +1212,7 @@ $("#newItemModal").on("hidden.bs.modal", () => {
     document.getElementById("newItemNameInput").classList.remove("is-invalid");
 });
 
-/* EDIT ITEM MODAL */
+// EDIT ITEM MODAL
 document.getElementById("editItemForm").addEventListener("submit", (e) => {
     e.preventDefault(); // Prevents the page from trying to send the data to a url
 
@@ -1279,7 +1245,7 @@ $("#editItemModal").on("hidden.bs.modal", () => {
     document.getElementById("editItemNameInput").classList.remove("is-invalid");
 });
 
-/* DELETE ITEM MODAL */
+// DELETE ITEM MODAL
 $("#deleteItemButton").on("click", () => {
 
     saveOpenedPage();
@@ -1330,7 +1296,7 @@ $("#deleteItemButton").on("click", () => {
 });
 
 
-
+// Notebook context menu items
 $("#NBCM-newPage").on("click", () => {
     document.getElementById("newItemFormTitle").textContent = `New Page in '${selectedItem.name}'`;
     (document.getElementById("newItemIconSelect") as HTMLSelectElement).value = "file-text";
@@ -1388,7 +1354,7 @@ $("#NBCM-deleteNotebook").on("click", () => {
 });
 
 
-
+// Section context menu items
 $("#SCM-newPage").on("click", () => {
     document.getElementById("newItemFormTitle").textContent = `New Page in '${selectedItem.name}'`;
     (document.getElementById("newItemIconSelect") as HTMLSelectElement).value = "file-text";
@@ -1445,7 +1411,7 @@ $("#SCM-deleteSection").on("click", () => {
 });
 
 
-
+// Page context menu items
 $("#PCM-editPage").on("click", () => {
     document.getElementById("editItemFormTitle").textContent = `Edit '${selectedItem.name}'`;
     (document.getElementById("editItemIconSelect") as HTMLSelectElement).value = selectedItem.icon;
@@ -1481,7 +1447,9 @@ $("#PCM-deletePage").on("click", () => {
     $("#deleteItemModal").modal("show");
 });
 
-/* Website functions */
+// #endregion
+
+// #region EXTERNAL LINK FUNCTIONS
 
 export function openFeedbackForm(): void {
 	api.ipcSend("openFeedbackForm");
@@ -1511,7 +1479,9 @@ export function openFeatherWebsite(): void {
 	api.ipcSend("openFeatherWebsite");
 }
 
-/* IPC Handlers */
+// #endregion
+
+// #region IPC HANDLERS
 
 api.ipcHandle("updateAvailable", (event: any, newVersion: string) => {
     setTimeout(() => {
@@ -1531,3 +1501,5 @@ api.ipcHandle("console.error", (event: any, text: string) => {
 api.ipcHandle("prefsShowMenuBar", (event: any, value: boolean) => {
     prefs.showMenuBar = value;
 });
+
+// #endregion
