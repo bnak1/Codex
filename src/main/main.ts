@@ -190,7 +190,7 @@ function openAboutWindow(): void {
         modal: (process.platform === "darwin" ? false : true),
         show: false
     });
-    about.once("ready-to-show", () => {
+    about.webContents.once("dom-ready", () => {
         about.show();
     });
     about.setMenu(null);
