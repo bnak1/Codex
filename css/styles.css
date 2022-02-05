@@ -102,10 +102,6 @@ code {
     transform: scale(0.5);
 }
 
-.modal-header {
-    border-bottom: none;
-}
-
 .modal-footer {
     padding: 0.5rem;
     border-top: none;
