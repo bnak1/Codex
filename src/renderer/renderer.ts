@@ -76,8 +76,15 @@ class NotebookItem {
         this.id = GenerateUUID();
         this.type = type;
 
+        if (this.type === NotebookItemType.NOTEBOOK) {
+            this.icon = "book";
+        }
+        else if (this.type === NotebookItemType.SECTION) {
+            this.icon = "folder";
+        }
         if (this.type === NotebookItemType.PAGE) {
             this.fileName = this.id + ".json";
+            this.icon = "file-text";
         }
     }
 
@@ -247,22 +254,34 @@ function init(): void {
 
     // Get notebooks save file
     if (api.fsExistsSync(prefs.dataDir + "/save.json")) {
-        try {
-            const json = api.fsReadFileSync(prefs.dataDir + "/save.json");
-            save = deserialize<Save>(json, Save);
+        const json = api.fsReadFileSync(prefs.dataDir + "/save.json");
 
-            // Add missing icon property
-            for (let i = 0; i < save.notebooks.length; i++) {
-                if (save.notebooks[i].icon === undefined) {
-                    save.notebooks[i].icon = "book";
-                }
+        // Check for old save from before 2.0.0
+        const testObject = JSON.parse(json);
+        if (testObject["version"] === undefined) {
+            try {
+                save = convertOldSave(testObject);
+                canSaveData = true;
+            }
+            catch (ex) {
+                canSaveData = false;
+                console.error(ex);
+                errorPopup("Could not convert old save.json to new format.", "Check the developer console for more information and report this to the GitHub Issues page. If nothing else works, you can rename your save.json to something else, reopen Codex, recreate your notebooks/notes, and edit the new save.json to point those pages to the old files in the /notes/ folder.");
             }
 
-            canSaveData = true;
+            if (canSaveData)
+                saveData();
         }
-        catch (err) {
-            canSaveData = false;
-            errorPopup("Your save file could not be parsed correctly.", "Please make sure your save.json JSON file is intact");
+        else {
+            try {
+                save = deserialize<Save>(json, Save);
+                canSaveData = true;
+            }
+            catch (err) {
+                canSaveData = false;
+                console.error(err);
+                errorPopup("Your save file could not be parsed correctly.", "Please make sure your save.json JSON file is intact");
+            }
         }
     }
     else {
@@ -1120,6 +1139,33 @@ export function saveOpenedPage(showIndicator = false) {
 
 export function openDataDir() {
     api.ipcSend("openDataDir", prefs.dataDir);
+}
+
+function convertOldSave(oldSave: any): Save {
+
+    const newSave = new Save();
+    const notebooks: any[] = oldSave["notebooks"];
+
+    notebooks.forEach(oldNb => {
+        const nb = new NotebookItem("", NotebookItemType.NOTEBOOK);
+        nb.name = oldNb["name"];
+        nb.color = oldNb["color"];
+        nb.icon = oldNb["icon"];
+
+        const pages: any[] = oldNb["pages"];
+        pages.forEach(oldPage => {
+            const page = new NotebookItem("", NotebookItemType.PAGE);
+            page.name = oldPage["title"];
+            page.fileName = oldPage["fileName"];
+            page.favorite = oldPage["favorite"];
+
+            nb.children.push(page);
+        });
+
+        newSave.notebooks.push(nb);
+    });
+
+    return newSave;
 }
 
 
