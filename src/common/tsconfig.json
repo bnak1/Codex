@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+		"module": "ES2015",
+        "moduleResolution": "Node",
+		"skipLibCheck": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "noImplicitAny": true,
+        "sourceMap": true,
+        "baseUrl": ".",
+        "outDir": "../../out",
+        "resolveJsonModule": true,
+        "removeComments": true,
+        "paths": {
+            "*": [
+                "node_modules/*"
+            ]
+        }
+    }
+}
