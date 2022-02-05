@@ -4,8 +4,6 @@
 		"module": "ES2015",
         "moduleResolution": "Node",
 		"skipLibCheck": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
         "noImplicitAny": true,
         "sourceMap": true,
         "baseUrl": ".",
