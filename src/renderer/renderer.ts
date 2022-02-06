@@ -4,10 +4,8 @@ import validatorEscape from "validator/es/lib/escape";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { prosemirrorSetup, schema } from "./prosemirror";
-import { deserialize } from "typescript-json-serializer";
-import { UserPrefs } from "../common/UserPrefs";
-import { Save } from "../common/Save";
-import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
+import { JsonProperty, Serializable, deserialize } from "typescript-json-serializer";
+import { v4 as GenerateUUID } from "uuid";
 
 // #region Expose the variables/functions sent through the preload.ts
 
@@ -16,6 +14,149 @@ type BridgedWindow = Window & typeof globalThis & {
 }
 
 const api: MainAPI = (window as BridgedWindow).mainAPI.api;
+
+// #endregion
+
+// #region TYPE DEFINITIONS
+
+class UserPrefs {
+    theme = 0;
+    codeStyle = "atom-one-dark";
+    accentColor = "#FF7A27";
+    defaultZoom = 1.0;
+    defaultMaximized = false;
+    dataDir = defaultDataDir;
+    pdfBreakOnH1 = false;
+    pdfDarkMode = false;
+    openPDFonExport = true;
+    tabSize = 4;
+    sidebarWidth = 275;
+    showCodeOverlay = true;
+    codeWordWrap = false;
+    firstUse = true;
+    showMenuBar = true;
+}
+
+enum NotebookItemType {
+    NOTEBOOK,
+    SECTION,
+    PAGE
+}
+
+@Serializable()
+class NotebookItem {
+
+    @JsonProperty()
+    type: NotebookItemType;
+
+    @JsonProperty()
+    id: string;
+
+    @JsonProperty()
+    name: string;
+
+    @JsonProperty()
+    color = "#000000";
+
+    @JsonProperty()
+    icon = "book";
+
+    @JsonProperty({ required: false })
+    fileName: string;
+
+    @JsonProperty({ required: false })
+    favorite = false;
+
+    @JsonProperty({ required: false })
+    expanded = false;
+
+    @JsonProperty({ type: NotebookItem, required: false })
+    children: NotebookItem[] = [];
+
+    constructor(name: string, type: NotebookItemType) {
+        this.name = name;
+        this.id = GenerateUUID();
+        this.type = type;
+
+        if (this.type === NotebookItemType.NOTEBOOK) {
+            this.icon = "book";
+        }
+        else if (this.type === NotebookItemType.SECTION) {
+            this.icon = "folder";
+        }
+        if (this.type === NotebookItemType.PAGE) {
+            this.fileName = this.id + ".json";
+            this.icon = "file-text";
+        }
+    }
+
+    toString() {
+        return this.id;
+    }
+
+    getAllPages(): NotebookItem[] {
+
+        const list: NotebookItem[] = [];
+
+        function recurseAdd(item: NotebookItem) {
+            if (item.type === NotebookItemType.NOTEBOOK || item.type === NotebookItemType.SECTION) {
+                item.children.forEach(child => {
+                    recurseAdd(child);
+                });
+            }
+            else if (item.type === NotebookItemType.PAGE) {
+                list.push(item);
+            }
+        }
+
+        this.children.forEach(child => {
+            recurseAdd(child);
+        });
+
+        return list;
+    }
+
+    static getParent(item: NotebookItem): NotebookItem {
+
+        let parent: NotebookItem = null;
+        let done = false;
+
+        function recurseSearch(x: NotebookItem) {
+
+            if (done === false) {
+                if (x.type === NotebookItemType.NOTEBOOK || x.type === NotebookItemType.SECTION) {
+                    if (x.children.indexOf(item) > -1) {
+                        parent = x;
+                        done = true;
+                        return;
+                    }
+                    else {
+                        x.children.forEach(child => {
+                            recurseSearch(child);
+                        });
+                    }
+                }
+            }
+            
+        }
+
+        save.notebooks.forEach(nb => {
+            if (done === false)
+                recurseSearch(nb);
+        });
+
+        return parent;
+    }
+}
+
+@Serializable()
+class Save {
+    @JsonProperty({ type: NotebookItem })
+    notebooks: NotebookItem[] = [];
+
+    @JsonProperty()
+    version = "2.0.0";
+}
 
 // #endregion
 
@@ -1129,7 +1270,7 @@ $("#deleteItemButton").on("click", () => {
         }
     }
     else {
-        const parent = NotebookItem.getParent(save, selectedItem);
+        const parent = NotebookItem.getParent(selectedItem);
 
         if (parent != null) {
             try {
