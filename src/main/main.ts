@@ -103,6 +103,11 @@ function createWindow() {
 
     });
 
+    mainWindow.on("close", (e) => {
+        e.preventDefault();
+        mainWindow.webContents.send("onClose");
+    });
+
     // Open the DevTools.
     //mainWindow.webContents.openDevTools();
 

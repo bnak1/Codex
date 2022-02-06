@@ -1502,4 +1502,11 @@ api.ipcHandle("prefsShowMenuBar", (event: any, value: boolean) => {
     prefs.showMenuBar = value;
 });
 
+api.ipcHandle("onClose", () => {
+    savePrefs();
+    saveOpenedPage();
+    saveData();
+    api.ipcSend("exit");
+});
+
 // #endregion
