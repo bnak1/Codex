@@ -5,10 +5,10 @@
     "homepage": "https://www.codexnotes.com/",
     "repository": "https://github.com/jcv8000/Codex",
     "private": "true",
-    "main": "out/main.js",
+    "main": "out/main/main.js",
     "scripts": {
-        "start": "tsc -p src/main/tsconfig.json && npx webpack --mode development && npx electron .",
-        "_dev-main": "tsc -p src/main/tsconfig.json --watch",
+        "start": "tsc && npx webpack --mode development && npx electron .",
+        "_dev-main": "tsc --watch",
         "_dev-renderer": "webpack --watch --mode development",
         "dev": "npm-run-all -p _dev-main _dev-renderer",
         "serve": "electron .",

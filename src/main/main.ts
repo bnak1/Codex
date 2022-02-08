@@ -5,6 +5,7 @@ import * as semver from "semver";
 import * as remote from "@electron/remote/main";
 import * as contextMenu from "electron-context-menu";
 import * as fs from "fs";
+import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
 
 // This makes sure we get a non-cached verison of the "latestversion.txt" file for the update check
 app.commandLine.appendSwitch("disable-http-cache");
@@ -95,6 +96,9 @@ function createWindow() {
     });
 
     Menu.setApplicationMenu(normalMenu);
+
+    const nb = new NotebookItem("pop", NotebookItemType.NOTEBOOK);
+    console.log(nb.color);
 
     mainWindow.webContents.once("dom-ready", () => {
 
