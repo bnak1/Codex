@@ -7,7 +7,6 @@ import { deserialize } from "typescript-json-serializer";
 import { UserPrefs } from "../common/UserPrefs";
 import { Save } from "../common/Save";
 import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
-import { Node as ProsemirrorNode } from "prosemirror-model";
 
 let save: Save = null;
 let prefs: UserPrefs = null;
@@ -265,7 +264,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 icon: "../assets/icons/icon.ico"
         });
 
-		ipcRenderer.on("updateMenubar", (event) => {
+		ipcRenderer.on("updateMenubar", () => {
 			titlebar.updateMenu(remote.Menu.getApplicationMenu());
 		});
 
