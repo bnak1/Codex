@@ -4,7 +4,6 @@ import validatorEscape from "validator/es/lib/escape";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { prosemirrorSetup, schema } from "./prosemirror";
-import { deserialize } from "typescript-json-serializer";
 import { Save } from "../common/Save";
 import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
 import { UserPrefs } from "../common/UserPrefs";
@@ -17,19 +16,19 @@ type BridgedWindow = Window & typeof globalThis & {
 
 const api: MainAPI = (window as BridgedWindow).mainAPI.api;
 
+
+let prefs: UserPrefs = null;
+let save: Save = null;
+
+const defaultDataDir = api.defaultSaveLocation();
+const idToObjectMap = new Map<string, NotebookItem>();
+
 // #endregion
 
 
 // #region GLOBAL VARIABLES
 
 let darkStyleLink: HTMLLinkElement;
-
-let save: Save;
-const idToObjectMap = new Map<string, NotebookItem>();
-
-export let prefs: UserPrefs;
-
-const defaultDataDir: string = api.ipcSendSync("defaultDataDir");
 
 let editorView: EditorView = null;
 
@@ -39,8 +38,6 @@ let selectedItem: NotebookItem;
 let createNewItemMode: NotebookItemType;
 let openedPage: NotebookItem;
 
-let canSaveData = false;
-let canSavePrefs = false;
 let zoomLevel = 1.000;
 
 let sidebarWidth = 275;
@@ -66,106 +63,14 @@ function init(): void {
         }
     });
 
+    prefs = api.getPrefs();
 
-    // Get user preferences
-    if (api.fsExistsSync(defaultDataDir + "/prefs.json")) {
-        try {
-            const json = api.fsReadFileSync(defaultDataDir + "/prefs.json");
-            prefs = JSON.parse(json);
-
-            fixPrefs();
-            applyPrefsAtStart();
-            canSavePrefs = true;
-        }
-        catch (ex) {
-            console.error(ex);
-            errorPopup("Your prefs.json file could not be parsed.", "Check the developer console for more information");
-        }
-    }
-    else {
-        prefs = new UserPrefs();
-        canSavePrefs = true;
-        savePrefs();
-        applyPrefsAtStart();
-    }
-
-
-    // Get notebooks save file
-    if (api.fsExistsSync(prefs.dataDir + "/save.json")) {
-        const json = api.fsReadFileSync(prefs.dataDir + "/save.json");
-
-        // Check for old save from before 2.0.0
-        const testObject = JSON.parse(json);
-        if (testObject["version"] === undefined) {
-            try {
-                save = convertOldSave(testObject);
-                canSaveData = true;
-            }
-            catch (ex) {
-                canSaveData = false;
-                console.error(ex);
-                errorPopup("Could not convert old save.json to new format.", "Check the developer console for more information and report this to the GitHub Issues page. If nothing else works, you can rename your save.json to something else, reopen Codex, recreate your notebooks/notes, and edit the new save.json to point those pages to the old files in the /notes/ folder.");
-            }
-
-            if (canSaveData)
-                saveData();
-        }
-        else {
-            try {
-                save = deserialize<Save>(json, Save);
-                canSaveData = true;
-            }
-            catch (err) {
-                canSaveData = false;
-                console.error(err);
-                errorPopup("Your save file could not be parsed correctly.", "Please make sure your save.json JSON file is intact");
-            }
-        }
-    }
-    else {
-        
-        //TODO REMOVE
-        save = new Save();
-
-        const nb1 = new NotebookItem("cs 340", NotebookItemType.NOTEBOOK);
-        nb1.children.push(new NotebookItem("Introduction", NotebookItemType.PAGE));
-
-        const s1 = new NotebookItem("UNIX", NotebookItemType.SECTION);
-        s1.children.push(new NotebookItem("Permissions", NotebookItemType.PAGE));
-        s1.children.push(new NotebookItem("Common Commands", NotebookItemType.PAGE));
-
-        const s1s1 = new NotebookItem("Different types of linuxes", NotebookItemType.SECTION);
-        s1s1.children.push(new NotebookItem("Ubuntu", NotebookItemType.PAGE));
-        s1s1.children.push(new NotebookItem("Mint", NotebookItemType.PAGE));
-        s1s1.children.push(new NotebookItem("Arch", NotebookItemType.PAGE));
-
-        s1.children.push(s1s1);
-
-        nb1.children.push(s1);
-
-        const nb2 = new NotebookItem("cs 321", NotebookItemType.NOTEBOOK);
-
-        const page = new NotebookItem("design vocab", NotebookItemType.PAGE);
-        page.fileName = page.id + ".json";
-
-        nb2.children.push(page);
-
-        save.notebooks.push(nb1);
-        save.notebooks.push(nb2);
-        
-        canSaveData = true;
-        saveData();
-    }
-
-    if (api.fsExistsSync(prefs.dataDir + "/notes/") === false) {
-        api.fsMkDirSync(prefs.dataDir + "/notes/");
-    }
+    save = api.getSave();
+    
+    applyPrefsAtStart();
 
     // Custom user stylesheet
-    if (!api.fsExistsSync(defaultDataDir + "/customStylesheet.css")) {
-        api.fsWriteFileSync(defaultDataDir + "/customStylesheet.css", "/*\n    Enter custom CSS rules for Codex in this file.\n    Use Inspect Element in the DevTools (Ctrl-Shift-I) in Codex to find id's and classes.\n*/");
-    }
-    (document.getElementById("customStylesheetLink") as HTMLLinkElement).href = "file:///" + defaultDataDir + "/customStylesheet.css";
+    (document.getElementById("customStylesheetLink") as HTMLLinkElement).href = "file:///" + defaultDataDir + "/userStyles.css";
 
     document.querySelectorAll(".my-sidebar-link").forEach(function (item) {
         item.addEventListener("click", () => {
@@ -323,69 +228,6 @@ init();
 
 // #region LOGIC FUNCTIONS
 
-export function fixPrefs(): void {
-
-    if (prefs.theme === undefined)
-        prefs.theme = 0;
-
-    if (prefs.codeStyle === undefined)
-        prefs.codeStyle = "atom-one-dark";
-
-    if (prefs.accentColor === undefined)
-        prefs.accentColor = "#FF7A27";
-
-    if (prefs.defaultZoom === undefined)
-        prefs.defaultZoom = 1.0;
-
-    if (prefs.defaultMaximized === undefined)
-        prefs.defaultMaximized = false;
-
-    if (prefs.dataDir === undefined)
-        prefs.dataDir = defaultDataDir;
-
-    if (prefs.pdfBreakOnH1 === undefined)
-        prefs.pdfBreakOnH1 = false;
-
-    if (prefs.pdfDarkMode === undefined)
-        prefs.pdfDarkMode = false;
-
-    if (prefs.openPDFonExport === undefined)
-        prefs.openPDFonExport = true;
-
-    if (prefs.tabSize === undefined)
-        prefs.tabSize = 4;
-
-    if (prefs.sidebarWidth === undefined)
-        prefs.sidebarWidth = 275;
-
-    if (prefs.showCodeOverlay === undefined)
-        prefs.showCodeOverlay = true;
-
-    if (prefs.codeWordWrap === undefined)
-        prefs.codeWordWrap = false;
-
-    if (prefs.firstUse === undefined)
-        prefs.firstUse = true;
-
-    if (prefs.showMenuBar === undefined)
-        prefs.showMenuBar = true;
-
-}
-
-export function savePrefs(): void {
-    if (canSavePrefs) {
-        prefs.defaultMaximized = api.ipcSendSync("isWindowMaximized");
-
-        try {
-            api.fsWriteFileSync(defaultDataDir + "/prefs.json", JSON.stringify(prefs, null, 2));
-        }
-        catch (err) {
-            console.error(err);
-            errorPopup("Couldn't save preferences file.", "Check the developer console for more information.");
-        }
-    }
-}
-
 export function applyPrefsAtStart(): void {
     (document.getElementById("themeSelect") as HTMLSelectElement).value = prefs.theme.toString();
     const header = document.getElementsByTagName("head")[0];
@@ -451,7 +293,7 @@ export function applyPrefsAtStart(): void {
     $("#darkmodePDFCheck").prop("checked", prefs.pdfDarkMode);
     $("#openPDFonExportCheck").prop("checked", prefs.openPDFonExport);
 
-    if (api.fsExistsSync(prefs.dataDir)) {
+    /*if (api.fsExistsSync(prefs.dataDir)) {
         document.getElementById("dataDirInput").innerText = prefs.dataDir;
 
         if (prefs.dataDir == defaultDataDir) {
@@ -473,7 +315,7 @@ export function applyPrefsAtStart(): void {
         alert("Your Save location (" + prefs.dataDir + ") could not be accessed. Reverting to the default (" + defaultDataDir + ")");
         prefs.dataDir = defaultDataDir;
         document.getElementById("dataDirInput").innerText = prefs.dataDir;
-    }
+    }*/
 
     resizeSidebar(prefs.sidebarWidth);
 
@@ -562,7 +404,7 @@ export function applyPrefsRuntime(needsRestart = false): void {
     //check to make sure this path is valid
     prefs.dataDir = document.getElementById("dataDirInput").innerText;
 
-    if (api.fsExistsSync(prefs.dataDir)) {
+    /*if (api.fsExistsSync(prefs.dataDir)) {
         document.getElementById("dataDirInput").innerText = prefs.dataDir;
 
         if (prefs.dataDir == defaultDataDir) {
@@ -584,9 +426,9 @@ export function applyPrefsRuntime(needsRestart = false): void {
         prefs.dataDir = defaultDataDir;
         document.getElementById("dataDirInput").innerText = prefs.dataDir;
         alert("The specified save directory could not be accessed. Reverting to default.");
-    }
+    }*/
 
-    savePrefs();
+    api.savePrefs(prefs);
 
     if (needsRestart) {
         api.ipcSend("restart");
@@ -610,19 +452,6 @@ export function applyPrefsRuntime(needsRestart = false): void {
         document.documentElement.style.setProperty("--code-white-space", "pre");
     }
 
-}
-
-export function saveData(): void {
-    if (canSaveData) {
-        try {
-            api.fsWriteFileSync(prefs.dataDir + "/save.json", JSON.stringify(save, null, 4));
-            saveOpenedPage();
-        }
-        catch (err) {
-            console.error(err);
-            errorPopup("Couldn't save the save.json file", "Check the developer console for more information");
-        }
-    }
 }
 
 export function errorPopup(message: string, detail: string) {
@@ -909,13 +738,11 @@ function loadPage(page: NotebookItem) {
     if (page.type === NotebookItemType.PAGE) {
         openedPage = page;
 
-        const filePath = prefs.dataDir + "/notes/" + page.fileName;
+        let content = api.loadPageData(openedPage.fileName);
 
-        if (api.fsExistsSync(filePath) === false) {
-            api.fsWriteFileSync(filePath, "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}");
+        if (content === "") {
+            content = "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}";
         }
-
-        const content = api.fsReadFileSync(prefs.dataDir + "/notes/" + page.fileName);
 
         if (editorView != null) {
             editorView.destroy();
@@ -932,11 +759,10 @@ function loadPage(page: NotebookItem) {
 }
 
 export function saveOpenedPage(showIndicator = false) {
-    if (openedPage != null && openedPage.type === NotebookItemType.PAGE && editorView != null && canSaveData === true) {
+    if (openedPage != null && openedPage.type === NotebookItemType.PAGE && editorView != null) {
         try {
-            const cont = JSON.stringify(editorView.state.doc.toJSON());
 
-            api.fsWriteFileSync(prefs.dataDir + "/notes/" + openedPage.fileName, cont);
+            api.savePageData(openedPage.fileName, editorView.state.doc.toJSON());
 
             let title = openedPage.name;
             if (title.length > 40) {
@@ -965,33 +791,6 @@ export function openDataDir() {
     api.ipcSend("openDataDir", prefs.dataDir);
 }
 
-function convertOldSave(oldSave: any): Save {
-
-    const newSave = new Save();
-    const notebooks: any[] = oldSave["notebooks"];
-
-    notebooks.forEach(oldNb => {
-        const nb = new NotebookItem("", NotebookItemType.NOTEBOOK);
-        nb.name = oldNb["name"];
-        nb.color = oldNb["color"];
-        nb.icon = oldNb["icon"];
-
-        const pages: any[] = oldNb["pages"];
-        pages.forEach(oldPage => {
-            const page = new NotebookItem("", NotebookItemType.PAGE);
-            page.name = oldPage["title"];
-            page.fileName = oldPage["fileName"];
-            page.favorite = oldPage["favorite"];
-
-            nb.children.push(page);
-        });
-
-        newSave.notebooks.push(nb);
-    });
-
-    return newSave;
-}
-
 // #endregion
 
 // #region DOM EVENT HANDLERS
@@ -1003,6 +802,10 @@ document.getElementById("newNotebookBtn").addEventListener("click", () => {
     $("#newItemModal").modal("show");
 });
 
+// FIRST USE MODAL
+$("#firstUseModal").on("hidden.bs.modal", () => {
+    prefs.firstUse = false;
+});
 
 // NEW ITEM MODAL
 document.getElementById("newItemForm").addEventListener("submit", (e) => {
@@ -1047,7 +850,7 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
 
         $("#newItemModal").modal("hide");
 
-        saveData();
+        api.saveData(save);
         processNotebooks();
 
         document.getElementById("newItemNameInput").classList.remove("is-invalid");
@@ -1087,7 +890,7 @@ document.getElementById("editItemForm").addEventListener("submit", (e) => {
         selectedItem.color = newColor;
         selectedItem.icon = newIcon;
 
-        saveData();
+        api.saveData(save);
         processNotebooks();
 
         feather.replace();
@@ -1116,7 +919,7 @@ $("#deleteItemButton").on("click", () => {
             const index = save.notebooks.indexOf(selectedItem);
             if (index > -1) {
                 save.notebooks.splice(index, 1);
-                saveData();
+                api.saveData(save);
                 processNotebooks();
             }
             else {
@@ -1137,7 +940,7 @@ $("#deleteItemButton").on("click", () => {
                 const index = parent.children.indexOf(selectedItem);
                 if (index > -1) {
                     parent.children.splice(index, 1);
-                    saveData();
+                    api.saveData(save);
                     processNotebooks();
                 }
                 else {
@@ -1363,9 +1166,10 @@ api.ipcHandle("prefsShowMenuBar", (event: any, value: boolean) => {
 });
 
 api.ipcHandle("onClose", () => {
-    savePrefs();
+    prefs.defaultMaximized = api.ipcSendSync("isWindowMaximized");
+    api.savePrefs(prefs);
     saveOpenedPage();
-    saveData();
+    api.saveData(save);
     api.ipcSend("exit");
 });
 

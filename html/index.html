@@ -653,7 +653,7 @@
             <div class="modal-content shadow-lg">
                 <div class="modal-header">
                     <h5 class="modal-title">Welcome</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="renderer.prefs.firstUse = false;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -662,8 +662,8 @@
                     Click Continue if you would like to see a short guide about how to use Codex.
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="mybtn" onclick="renderer.prefs.firstUse = false;" data-dismiss="modal">No thanks</button>
-                    <button type="button" class="mybtn-primary" data-dismiss="modal" onclick="renderer.autoOpenHelpTab(); renderer.prefs.firstUse = false;">Continue</button>
+                    <button type="button" class="mybtn" data-dismiss="modal">No thanks</button>
+                    <button type="button" class="mybtn-primary" data-dismiss="modal" onclick="renderer.autoOpenHelpTab();">Continue</button>
                 </div>
             </div>
         </div>
