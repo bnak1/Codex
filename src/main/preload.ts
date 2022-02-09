@@ -27,9 +27,9 @@ export type MainAPI = {
     ipcSend(channel: string, ...args: any[]): void,
     ipcSendSync(channel: string, ...args: any[]): any,
     defaultSaveLocation(): string,
-    getPrefs(): UserPrefs
+    getPrefs(): string
     savePrefs(prefsObj: UserPrefs): void,
-    getSave(): Save,
+    getSave(): string,
     saveData(saveObj: Save): void,
     loadPageData(fileName: string): string,
     savePageData(fileName: string, docObject: { [key: string]: any } ): void,
@@ -52,8 +52,8 @@ const api: MainAPI = {
         return defaultSaveLocation;
     },
 
-    getPrefs: (): UserPrefs => {
-        return prefs;
+    getPrefs: (): string => {
+        return JSON.stringify(prefs);
     },
 
     savePrefs: (prefsObj: UserPrefs): void => {
@@ -61,8 +61,8 @@ const api: MainAPI = {
         fs.writeFileSync(defaultSaveLocation + "/prefs.json", JSON.stringify(prefs, null, 4), "utf-8");
     },
 
-    getSave: (): Save => {
-        return save;
+    getSave: (): string => {
+        return JSON.stringify(save);
     },
 
     saveData: (saveObj: Save): void => {

@@ -676,7 +676,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 700px;">
             <div class="modal-content shadow-lg">
                 <div class="modal-header">
-                    <h5 class="modal-title">Export all Notebook pages</h5>
+                    <h5 class="modal-title">Export all pages in...</h5>
                     <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>-->
@@ -684,8 +684,8 @@
                 <div class="modal-body">
                     <center>
                         <span id="exportModalModalIcon" data-feather="book" style="width: 32px; height: 32px; vertical-align: -12px;"></span>
-                        <span id="exportModalModalTitle" class="ml-2" style="font-size: 16px; font-weight: 500;"></span>
-                        <span id="exportModalModalPageCount"></span>
+                        <span id="exportModalModalTitle" class="ml-1" style="font-size: 16px; font-weight: 500;"></span>
+                        <div id="exportModalModalPageCount" class="mt-3"></div>
                     </center>
                     <hr>
                     <div class="mb-3">
@@ -717,9 +717,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn mybtn" id="exportModalCancelButton" onclick="renderer.closeexportModalModal()">Cancel</button>
+                    <button type="button" class="btn mybtn" id="exportModalCancelButton" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn mybtn-primary" id="exportModalButton" disabled="true" onclick="renderer.exportModalPages()">Export</button>
-                    <button type="button" class="btn mybtn" id="exportModalCloseButton" onclick="renderer.closeexportModalModal()" style="display: none;">Close</button>
+                    <button type="button" class="btn mybtn" id="exportModalCloseButton" data-dismiss="modal" style="display: none;">Close</button>
                 </div>
             </div>
         </div>

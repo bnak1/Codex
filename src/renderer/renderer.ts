@@ -7,6 +7,7 @@ import { prosemirrorSetup, schema } from "./prosemirror";
 import { Save } from "../common/Save";
 import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
 import { UserPrefs } from "../common/UserPrefs";
+import { deserialize } from "typescript-json-serializer";
 
 // #region Expose the variables/functions sent through the preload.ts
 
@@ -63,9 +64,9 @@ function init(): void {
         }
     });
 
-    prefs = api.getPrefs();
+    prefs = JSON.parse(api.getPrefs());
 
-    save = api.getSave();
+    save = deserialize<Save>(api.getSave(), Save);
     
     applyPrefsAtStart();
 
@@ -988,7 +989,6 @@ $("#NBCM-editNotebook").on("click", () => {
     document.getElementById("editItemFormTitle").textContent = `Edit '${selectedItem.name}'`;
     (document.getElementById("editItemIconSelect") as HTMLSelectElement).value = selectedItem.icon;
     document.getElementById("editItemIconPreview").setAttribute("data-feather", selectedItem.icon);
-    console.log(selectedItem.color);
     (document.getElementById("editItemColorPicker") as HTMLInputElement).value = selectedItem.color;
     document.getElementById("editItemIconPreview").style.color = selectedItem.color;
     (document.getElementById("editItemNameInput") as HTMLInputElement).value = selectedItem.name;
@@ -999,10 +999,16 @@ $("#NBCM-editNotebook").on("click", () => {
 });
 
 $("#NBCM-exportAllPages").on("click", () => {
-    document.getElementById("exportModalModalTitle").textContent = selectedItem.name;
+    let name = selectedItem.name;
+
+    if (name.length > 60) {
+        name = name.substring(0, 59) + "...";
+    }
+
+    document.getElementById("exportModalModalTitle").textContent = name;
     document.getElementById("exportModalModalIcon").setAttribute("data-feather", selectedItem.icon);
     document.getElementById("exportModalModalIcon").style.color = selectedItem.color;
-    document.getElementById("exportModalModalPageCount").textContent = `${selectedItem.getAllPages().length} pages`;
+    document.getElementById("exportModalModalPageCount").textContent = `${selectedItem.getAllPages().length} page(s)`;
     feather.replace();
 
     $("#exportModal").modal("show");
