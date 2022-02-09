@@ -58,7 +58,7 @@ const api: MainAPI = {
 
     savePrefs: (prefsObj: UserPrefs): void => {
         prefs = prefsObj;
-        fs.writeFileSync(defaultSaveLocation + "/prefs.json", JSON.stringify(prefs), "utf-8");
+        fs.writeFileSync(defaultSaveLocation + "/prefs.json", JSON.stringify(prefs, null, 4), "utf-8");
     },
 
     getSave: (): Save => {
@@ -67,7 +67,7 @@ const api: MainAPI = {
 
     saveData: (saveObj: Save): void => {
         save = saveObj;
-        fs.writeFileSync(saveLocation + "/save.json", JSON.stringify(save), "utf-8");
+        fs.writeFileSync(saveLocation + "/save.json", JSON.stringify(save, null, 4), "utf-8");
     },
 
     loadPageData: (fileName: string): string => {
