@@ -11,6 +11,9 @@ import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
 let save: Save = null;
 let prefs: UserPrefs = null;
 
+let canSavePrefs = false;
+let canSaveData = false;
+
 const defaultSaveLocation = ipcRenderer.sendSync("defaultDataDir");
 let saveLocation = "";
 
@@ -57,8 +60,10 @@ const api: MainAPI = {
     },
 
     savePrefs: (prefsObj: UserPrefs): void => {
-        prefs = prefsObj;
-        fs.writeFileSync(defaultSaveLocation + "/prefs.json", JSON.stringify(prefs, null, 4), "utf-8");
+        if (canSavePrefs == true) {
+            prefs = prefsObj;
+            fs.writeFileSync(defaultSaveLocation + "/prefs.json", JSON.stringify(prefs, null, 4), "utf-8");
+        }
     },
 
     getSave: (): string => {
@@ -66,8 +71,10 @@ const api: MainAPI = {
     },
 
     saveData: (saveObj: Save): void => {
-        save = saveObj;
-        fs.writeFileSync(saveLocation + "/save.json", JSON.stringify(save, null, 4), "utf-8");
+        if (canSaveData == true) {
+            save = saveObj;
+            fs.writeFileSync(saveLocation + "/save.json", JSON.stringify(save, null, 4), "utf-8");
+        }
     },
 
     loadPageData: (fileName: string): string => {
@@ -80,7 +87,7 @@ const api: MainAPI = {
     },
 
     savePageData: (fileName: string, docObject: { [key: string]: any }): void => {
-        if (!fileName.includes("/") && !fileName.includes("\\")) {
+        if (!fileName.includes("/") && !fileName.includes("\\") && canSaveData == true) {
             fs.writeFileSync(saveLocation + "/notes/" + fileName, JSON.stringify(docObject), "utf-8");
         }
     }
@@ -137,15 +144,18 @@ if (fs.existsSync(defaultSaveLocation + "/prefs.json")) {
 
         if (prefs.showMenuBar === undefined)
             prefs.showMenuBar = true;
+
+
+        canSavePrefs = true;
     }
     catch (ex) {
-        console.error(ex);
-        //errorPopup("Your prefs.json file could not be parsed.", "Check the developer console for more information");
+        ipcRenderer.send("errorLoadingData", `Your prefs.json file in '${defaultSaveLocation}' could not be parsed. Check the prefs.json file for issues or try deleting it.\n\n${ex}`);
     }
 }
 else {
     prefs = new UserPrefs();
     prefs.dataDir = defaultSaveLocation;
+    canSavePrefs = true;
     api.savePrefs(prefs);
 }
 // LOAD SAVE
@@ -154,24 +164,29 @@ if (fs.existsSync(saveLocation + "/save.json")) {
     const json = fs.readFileSync(saveLocation + "/save.json", "utf-8").toString();
 
     // Check for old save from before 2.0.0
-    const testObject = JSON.parse(json);
-    if (testObject["version"] === undefined) {
-        try {
-            save = convertOldSave(testObject);
+    try {
+        const testObject = JSON.parse(json);
+        if (testObject["version"] === undefined) {
+            try {
+                save = convertOldSave(testObject);
+                canSaveData = true;
+            }
+            catch (ex) {
+                ipcRenderer.send("errorLoadingData", `Your save.json file in '${saveLocation}' could not be converted to the new format. Check the save.json file for issues, and/or report this problem to the GitHub Issues page.\n\n${ex}`);
+            }
         }
-        catch (ex) {
-            console.error(ex);
-            //errorPopup("Could not convert old save.json to new format.", "Check the developer console for more information and report this to the GitHub Issues page. If nothing else works, you can rename your save.json to something else, reopen Codex, recreate your notebooks/notes, and edit the new save.json to point those pages to the old files in the /notes/ folder.");
+        else {
+            try {
+                save = deserialize<Save>(json, Save);
+                canSaveData = true;
+            }
+            catch (err) {
+                ipcRenderer.send("errorLoadingData", `Your save.json file in '${saveLocation}' could not be parsed. Check the save.json file for issues, and/or report this problem to the GitHub Issues page.\n\n${err}`);
+            }
         }
     }
-    else {
-        try {
-            save = deserialize<Save>(json, Save);
-        }
-        catch (err) {
-            console.error(err);
-            //errorPopup("Your save file could not be parsed correctly.", "Please make sure your save.json JSON file is intact");
-        }
+    catch (err) {
+        ipcRenderer.send("errorLoadingData", `Your save.json file in '${saveLocation}' could not be parsed. Check the save.json file for issues, and/or report this problem to the GitHub Issues page.\n\n${err}`);
     }
 
     api.saveData(save);
@@ -206,6 +221,8 @@ else {
 
     save.notebooks.push(nb1);
     save.notebooks.push(nb2);
+
+    canSaveData = true;
     
     api.saveData(save);
 }

@@ -720,7 +720,7 @@ export function processNotebooks(): void {
         });
     }
     catch (ex) {
-        console.log(ex);
+        console.error(ex);
     }
 
     feather.replace();

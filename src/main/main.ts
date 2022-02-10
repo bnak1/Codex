@@ -533,3 +533,20 @@ ipcMain.on("openLicenseWebpage", () => {
 ipcMain.on("openAboutWindow", () => {
     openAboutWindow();
 });
+
+ipcMain.on("errorLoadingData", (e, text: string) => {
+    mainWindow.destroy();
+    
+    const options: MessageBoxOptions = {
+        type: "error",
+        buttons: ["Ok"],
+        defaultId: 0,
+        cancelId: 0,
+        detail: text.toString(),
+        title: "Error",
+        message: "Error while loading prefs/save data"
+    };
+    dialog.showMessageBoxSync(mainWindow, options);
+
+    app.exit();
+});
