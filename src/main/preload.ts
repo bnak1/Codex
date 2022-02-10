@@ -221,32 +221,6 @@ else {
     //TODO REMOVE
     save = new Save();
 
-    const nb1 = new NotebookItem("cs 340", NotebookItemType.NOTEBOOK);
-    nb1.children.push(new NotebookItem("Introduction", NotebookItemType.PAGE));
-
-    const s1 = new NotebookItem("UNIX", NotebookItemType.SECTION);
-    s1.children.push(new NotebookItem("Permissions", NotebookItemType.PAGE));
-    s1.children.push(new NotebookItem("Common Commands", NotebookItemType.PAGE));
-
-    const s1s1 = new NotebookItem("Different types of linuxes", NotebookItemType.SECTION);
-    s1s1.children.push(new NotebookItem("Ubuntu", NotebookItemType.PAGE));
-    s1s1.children.push(new NotebookItem("Mint", NotebookItemType.PAGE));
-    s1s1.children.push(new NotebookItem("Arch", NotebookItemType.PAGE));
-
-    s1.children.push(s1s1);
-
-    nb1.children.push(s1);
-
-    const nb2 = new NotebookItem("cs 321", NotebookItemType.NOTEBOOK);
-
-    const page = new NotebookItem("design vocab", NotebookItemType.PAGE);
-    page.fileName = page.id + ".json";
-
-    nb2.children.push(page);
-
-    save.notebooks.push(nb1);
-    save.notebooks.push(nb2);
-
     canSaveData = true;
     
     api.saveData(save);
