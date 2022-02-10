@@ -148,8 +148,8 @@ if (fs.existsSync(defaultSaveLocation + "/prefs.json")) {
 
         canSavePrefs = true;
     }
-    catch (ex) {
-        ipcRenderer.send("errorLoadingData", `Your prefs.json file in '${defaultSaveLocation}' could not be parsed. Check the prefs.json file for issues or try deleting it.\n\n${ex}`);
+    catch (err) {
+        ipcRenderer.send("errorLoadingData", `Your prefs.json file in '${defaultSaveLocation}' could not be parsed. Check the prefs.json file for issues or try deleting it.\n\n${err}`);
     }
 }
 else {
@@ -171,8 +171,8 @@ if (fs.existsSync(saveLocation + "/save.json")) {
                 save = convertOldSave(testObject);
                 canSaveData = true;
             }
-            catch (ex) {
-                ipcRenderer.send("errorLoadingData", `Your save.json file in '${saveLocation}' could not be converted to the new format. Check the save.json file for issues, and/or report this problem to the GitHub Issues page.\n\n${ex}`);
+            catch (err) {
+                ipcRenderer.send("errorLoadingData", `Your save.json file in '${saveLocation}' could not be converted to the new format. Check the save.json file for issues, and/or report this problem to the GitHub Issues page.\n\n${err}`);
             }
         }
         else {

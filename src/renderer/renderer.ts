@@ -719,8 +719,9 @@ export function processNotebooks(): void {
             draw(nb, document.getElementById("notebookList"));
         });
     }
-    catch (ex) {
-        console.error(ex);
+    catch (err) {
+        console.error(err);
+        errorPopup("Could not draw notebooks", `Please report this to the GitHub Issues page.\n\n${err}`);
     }
 
     feather.replace();
@@ -928,9 +929,9 @@ $("#deleteItemButton").on("click", () => {
                 console.error(`Notebook with name '${selectedItem.name}' was not found in save.notebooks.`);
             }
         }
-        catch (ex) {
+        catch (err) {
             errorPopup(`Could not delete the item ${selectedItem.name}`, "Check the developer console and report this error to the GitHub Issues page.");
-            console.error(ex);
+            console.error(err);
         }
     }
     else {
@@ -949,9 +950,9 @@ $("#deleteItemButton").on("click", () => {
                     console.error(`Item with name '${selectedItem.name}' was not found directly inside '${parent.name}'.`);
                 }
             }
-            catch (ex) {
+            catch (err) {
                 errorPopup(`Could not delete the item ${selectedItem.name}`, "Check the developer console and report this error to the GitHub Issues page.");
-                console.error(ex);
+                console.error(err);
             }
         }
     }
