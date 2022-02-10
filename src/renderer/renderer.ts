@@ -15,13 +15,13 @@ type BridgedWindow = Window & typeof globalThis & {
     mainAPI: any
 }
 
-const api: MainAPI = (window as BridgedWindow).mainAPI.api;
+export const api: MainAPI = (window as BridgedWindow).mainAPI.api;
 
 
 let prefs: UserPrefs = null;
 let save: Save = null;
 
-const defaultDataDir = api.defaultSaveLocation();
+const defaultSaveLocation = api.defaultSaveLocation();
 const idToObjectMap = new Map<string, NotebookItem>();
 
 // #endregion
@@ -71,7 +71,7 @@ function init(): void {
     applyPrefsAtStart();
 
     // Custom user stylesheet
-    (document.getElementById("customStylesheetLink") as HTMLLinkElement).href = "file:///" + defaultDataDir + "/userStyles.css";
+    (document.getElementById("customStylesheetLink") as HTMLLinkElement).href = "file:///" + defaultSaveLocation + "/userStyles.css";
 
     document.querySelectorAll(".my-sidebar-link").forEach(function (item) {
         item.addEventListener("click", () => {
@@ -119,7 +119,7 @@ function init(): void {
 
     // TOOLTIPS
 
-    document.getElementById("revertToDefaultDataDirBtnTooltip").title = "Revert to" + defaultDataDir;
+    document.getElementById("revertToDefaultDataDirBtnTooltip").title = "Revert to" + defaultSaveLocation;
     $("#revertToDefaultDataDirBtnTooltip").tooltip({
         trigger: "hover"
     });
@@ -294,29 +294,22 @@ export function applyPrefsAtStart(): void {
     $("#darkmodePDFCheck").prop("checked", prefs.pdfDarkMode);
     $("#openPDFonExportCheck").prop("checked", prefs.openPDFonExport);
 
-    /*if (api.fsExistsSync(prefs.dataDir)) {
-        document.getElementById("dataDirInput").innerText = prefs.dataDir;
+    document.getElementById("dataDirInput").innerText = api.saveLocation();
 
-        if (prefs.dataDir == defaultDataDir) {
-            (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = true;
-            document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "none";
-            document.getElementById("revertToDefaultDataDirBtnTooltip").title = "You're already in the default location.";
-            $("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
-            $("#revertToDefaultDataDirBtnTooltip").tooltip();
-        }
-        else {
-            (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = false;
-            document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "auto";
-            document.getElementById("revertToDefaultDataDirBtnTooltip").title = "Revert to " + defaultDataDir;
-            $("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
-            $("#revertToDefaultDataDirBtnTooltip").tooltip();
-        }
+    if (api.saveLocation() == defaultSaveLocation) {
+        (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = true;
+        document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "none";
+        document.getElementById("revertToDefaultDataDirBtnTooltip").title = "You're already in the default location.";
+        $("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
+        $("#revertToDefaultDataDirBtnTooltip").tooltip();
     }
     else {
-        alert("Your Save location (" + prefs.dataDir + ") could not be accessed. Reverting to the default (" + defaultDataDir + ")");
-        prefs.dataDir = defaultDataDir;
-        document.getElementById("dataDirInput").innerText = prefs.dataDir;
-    }*/
+        (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = false;
+        document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "auto";
+        document.getElementById("revertToDefaultDataDirBtnTooltip").title = "Revert to " + defaultSaveLocation;
+        $("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
+        $("#revertToDefaultDataDirBtnTooltip").tooltip();
+    }
 
     resizeSidebar(prefs.sidebarWidth);
 
@@ -402,33 +395,6 @@ export function applyPrefsRuntime(needsRestart = false): void {
     prefs.pdfDarkMode = $("#darkmodePDFCheck").is(":checked");
     prefs.openPDFonExport = $("#openPDFonExportCheck").is(":checked");
 
-    //check to make sure this path is valid
-    prefs.dataDir = document.getElementById("dataDirInput").innerText;
-
-    /*if (api.fsExistsSync(prefs.dataDir)) {
-        document.getElementById("dataDirInput").innerText = prefs.dataDir;
-
-        if (prefs.dataDir == defaultDataDir) {
-            (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = true;
-            document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "none";
-            document.getElementById("revertToDefaultDataDirBtnTooltip").title = "You're already in the default location.";
-            $("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
-            $("#revertToDefaultDataDirBtnTooltip").tooltip();
-        }
-        else {
-            (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = false;
-            document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "auto";
-            document.getElementById("revertToDefaultDataDirBtnTooltip").title = "Revert to " + defaultDataDir;
-            $("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
-            $("#revertToDefaultDataDirBtnTooltip").tooltip();
-        }
-    }
-    else {
-        prefs.dataDir = defaultDataDir;
-        document.getElementById("dataDirInput").innerText = prefs.dataDir;
-        alert("The specified save directory could not be accessed. Reverting to default.");
-    }*/
-
     api.savePrefs(prefs);
 
     if (needsRestart) {
@@ -476,6 +442,10 @@ export function showUIPage(id: "homePage" | "settingsPage" | "editorPage"): void
         document.getElementById(id).style.display = "block";
 
         document.getElementById("mainContainer").scrollTo(0, 0);
+    }
+
+    if (openedPage != null) {
+        saveOpenedPage();
     }
 
 	if (id == "editorPage") {
@@ -787,10 +757,6 @@ export function saveOpenedPage(showIndicator = false) {
             console.error(err);
         }
     }
-}
-
-export function openDataDir() {
-    api.ipcSend("openDataDir", prefs.dataDir);
 }
 
 // #endregion

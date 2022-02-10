@@ -4,7 +4,6 @@ export class UserPrefs {
     accentColor = "#FF7A27";
     defaultZoom = 1.0;
     defaultMaximized = false;
-    dataDir = "";
     pdfBreakOnH1 = false;
     pdfDarkMode = false;
     openPDFonExport = true;

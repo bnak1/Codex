@@ -458,7 +458,7 @@ ipcMain.on("setMenuBarVisibility", (event, value: boolean) => {
 
 ipcMain.on("restart", () => {
     app.relaunch();
-    app.exit();
+    mainWindow.webContents.send("onClose");
 });
 
 ipcMain.on("exit", () => {
@@ -549,4 +549,17 @@ ipcMain.on("errorLoadingData", (e, text: string) => {
     dialog.showMessageBoxSync(mainWindow, options);
 
     app.exit();
+});
+
+ipcMain.on("changeSaveLocation", (e) => {
+    const filepaths = dialog.showOpenDialogSync(mainWindow, {
+        properties: ["openDirectory"]
+    });
+
+    if (filepaths !== undefined) {
+        e.returnValue = filepaths[0];
+    }
+    else {
+        e.returnValue = "";
+    }
 });

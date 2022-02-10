@@ -423,12 +423,12 @@
                             <h5 class="settingTitle">Save Location</h5>
                             <div class="input-group">
                                 <!--<input type="text" id="dataDirInput" class="form-control" spellcheck="false" readonly onclick="openDataDir()">-->
-                                <div class="form-control" readonly><a href="#" onclick="renderer.openDataDir()" id="dataDirInput" style="font-size: 14px; vertical-align: 1px;"></a></div>
+                                <div class="form-control" readonly><a href="#" onclick="renderer.api.openSaveLocation()" id="dataDirInput" style="font-size: 14px; vertical-align: 1px;"></a></div>
                                 <div class="input-group-append" id="revertToDefaultDataDirBtnTooltip">
-                                    <button id="revertToDefaultDataDirBtn" onclick="renderer.revertToDefaultDataDir()" class="btn mybtn-primary" type="button" style="padding-left: 12px; padding-right: 12px" title=""><span data-feather="rotate-ccw"></span></button>
+                                    <button id="revertToDefaultDataDirBtn" onclick="renderer.api.revertToDefaultSaveLocation()" class="btn mybtn-primary" type="button" style="padding-left: 12px; padding-right: 12px" title=""><span data-feather="rotate-ccw"></span></button>
                                 </div>
                                 <div class="input-group-append">
-                                    <button onclick="renderer.DataDirDialog();" id="dataDirButton" class="btn mybtn-primary" type="button" style="padding-left: 12px; padding-right: 12px" title="Change save directory"><span data-feather="folder"></span></button>
+                                    <button onclick="renderer.api.changeSaveLocation()" id="dataDirButton" class="btn mybtn-primary" type="button" style="padding-left: 12px; padding-right: 12px" title="Change save directory"><span data-feather="folder"></span></button>
                                 </div>
                             </div>
                             <br>

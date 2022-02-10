@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
+import { contextBridge, ipcRenderer, IpcRendererEvent, shell } from "electron";
 import * as fs from "fs";
 import * as remote from "@electron/remote";
 import {Titlebar, Color} from "@treverix/custom-electron-titlebar";
@@ -30,12 +30,16 @@ export type MainAPI = {
     ipcSend(channel: string, ...args: any[]): void,
     ipcSendSync(channel: string, ...args: any[]): any,
     defaultSaveLocation(): string,
+    saveLocation(): string,
     getPrefs(): string
     savePrefs(prefsObj: UserPrefs): void,
     getSave(): string,
     saveData(saveObj: Save): void,
     loadPageData(fileName: string): string,
     savePageData(fileName: string, docObject: { [key: string]: any } ): void,
+    openSaveLocation(): void,
+    changeSaveLocation(): void,
+    revertToDefaultSaveLocation(): void,
 }
 
 const api: MainAPI = {
@@ -53,6 +57,10 @@ const api: MainAPI = {
 
     defaultSaveLocation: (): string => {
         return defaultSaveLocation;
+    },
+
+    saveLocation: (): string => {
+        return saveLocation;
     },
 
     getPrefs: (): string => {
@@ -90,6 +98,26 @@ const api: MainAPI = {
         if (!fileName.includes("/") && !fileName.includes("\\") && canSaveData == true) {
             fs.writeFileSync(saveLocation + "/notes/" + fileName, JSON.stringify(docObject), "utf-8");
         }
+    },
+
+    openSaveLocation: (): void => {
+        if (isValidDir(saveLocation))
+            shell.openExternal(saveLocation, {activate: true});
+    },
+
+    changeSaveLocation: (): void => {
+        const newLocation = ipcRenderer.sendSync("changeSaveLocation");
+        if (newLocation !== "") {
+            if (isValidDir(newLocation)) {
+                fs.writeFileSync(defaultSaveLocation + "/saveLocation.txt", newLocation, "utf-8");
+                ipcRenderer.send("restart");
+            }
+        }
+    },
+
+    revertToDefaultSaveLocation: (): void => {
+        fs.writeFileSync(defaultSaveLocation + "/saveLocation.txt", defaultSaveLocation, "utf-8");
+        ipcRenderer.send("restart");
     }
 };
 
@@ -114,9 +142,6 @@ if (fs.existsSync(defaultSaveLocation + "/prefs.json")) {
 
         if (prefs.defaultMaximized === undefined)
             prefs.defaultMaximized = false;
-
-        if (prefs.dataDir === undefined)
-            prefs.dataDir = defaultSaveLocation;
 
         if (prefs.pdfBreakOnH1 === undefined)
             prefs.pdfBreakOnH1 = false;
@@ -154,7 +179,7 @@ if (fs.existsSync(defaultSaveLocation + "/prefs.json")) {
 }
 else {
     prefs = new UserPrefs();
-    prefs.dataDir = defaultSaveLocation;
+    saveLocation = defaultSaveLocation;
     canSavePrefs = true;
     api.savePrefs(prefs);
 }
@@ -262,6 +287,14 @@ function convertOldSave(oldSave: any): Save {
     return newSave;
 }
 
+function isValidDir(path: string): boolean {
+    if (fs.existsSync(path) && fs.lstatSync(path).isDirectory()) {
+        console.log("valid dir");
+        return true;
+    }
+    console.log("invalid dir");
+    return false;
+}
 
 contextBridge.exposeInMainWorld("mainAPI", {
 	api: api
