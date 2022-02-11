@@ -743,10 +743,7 @@ export function saveOpenedPage(showIndicator = false) {
 
             api.savePageData(openedPage.fileName, editorView.state.doc.toJSON());
 
-            let title = openedPage.name;
-            if (title.length > 40) {
-                title = title.substring(0, 40) + "...";
-            }
+            const title = shorten(openedPage.name);
 
             if (showIndicator) {
                 clearTimeout(fadeInSaveIndicator);
@@ -764,6 +761,16 @@ export function saveOpenedPage(showIndicator = false) {
             console.error(err);
         }
     }
+}
+
+function shorten(input: string): string {
+    let output = "";
+    if (input.length > 50)
+        output = input.substring(0, 49) + "...";
+    else
+        output = input;
+
+    return output;
 }
 
 // #endregion
@@ -931,7 +938,9 @@ $("#deleteItemButton").on("click", () => {
 
 // Notebook context menu items
 $("#NBCM-newPage").on("click", () => {
-    document.getElementById("newItemFormTitle").textContent = `New Page in '${selectedItem.name}'`;
+    const name = shorten(selectedItem.name);
+
+    document.getElementById("newItemFormTitle").textContent = `New Page in '${name}'`;
     (document.getElementById("newItemIconSelect") as HTMLSelectElement).value = "file-text";
     document.getElementById("newItemIconPreview").setAttribute("data-feather", "file-text");
     feather.replace();
@@ -943,7 +952,9 @@ $("#NBCM-newPage").on("click", () => {
 });
 
 $("#NBCM-newSection").on("click", () => {
-    document.getElementById("newItemFormTitle").textContent = `New Section in '${selectedItem.name}'`;
+    const name = shorten(selectedItem.name);
+    
+    document.getElementById("newItemFormTitle").textContent = `New Section in '${name}'`;
     (document.getElementById("newItemIconSelect") as HTMLSelectElement).value = "folder";
     document.getElementById("newItemIconPreview").setAttribute("data-feather", "folder");
     feather.replace();
@@ -955,7 +966,9 @@ $("#NBCM-newSection").on("click", () => {
 });
 
 $("#NBCM-editNotebook").on("click", () => {
-    document.getElementById("editItemFormTitle").textContent = `Edit '${selectedItem.name}'`;
+    const name = shorten(selectedItem.name);
+
+    document.getElementById("editItemFormTitle").textContent = `Edit '${name}'`;
     (document.getElementById("editItemIconSelect") as HTMLSelectElement).value = selectedItem.icon;
     document.getElementById("editItemIconPreview").setAttribute("data-feather", selectedItem.icon);
     (document.getElementById("editItemColorPicker") as HTMLInputElement).value = selectedItem.color;
@@ -968,11 +981,7 @@ $("#NBCM-editNotebook").on("click", () => {
 });
 
 $("#NBCM-exportAllPages").on("click", () => {
-    let name = selectedItem.name;
-
-    if (name.length > 60) {
-        name = name.substring(0, 59) + "...";
-    }
+    const name = shorten(selectedItem.name);
 
     document.getElementById("exportModalModalTitle").textContent = name;
     document.getElementById("exportModalModalIcon").setAttribute("data-feather", selectedItem.icon);
@@ -984,8 +993,10 @@ $("#NBCM-exportAllPages").on("click", () => {
 });
 
 $("#NBCM-deleteNotebook").on("click", () => {
+    const name = shorten(selectedItem.name);
+
     document.getElementById("deleteItemModalTitle").innerHTML = `
-        Are you sure you want to delete <b>${validatorEscape(selectedItem.name)}</b>?<br><br>All sections and pages inside this notebook will be deleted, but the pages' actual data will remain in the notes folder.
+        Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>All sections and pages inside this notebook will be deleted, but the pages' actual data will remain in the notes folder.
     `;
 
     $("#deleteItemModal").modal("show");
@@ -994,7 +1005,9 @@ $("#NBCM-deleteNotebook").on("click", () => {
 
 // Section context menu items
 $("#SCM-newPage").on("click", () => {
-    document.getElementById("newItemFormTitle").textContent = `New Page in '${selectedItem.name}'`;
+    const name = shorten(selectedItem.name);
+
+    document.getElementById("newItemFormTitle").textContent = `New Page in '${name}'`;
     (document.getElementById("newItemIconSelect") as HTMLSelectElement).value = "file-text";
     document.getElementById("newItemIconPreview").setAttribute("data-feather", "file-text");
     feather.replace();
@@ -1006,7 +1019,9 @@ $("#SCM-newPage").on("click", () => {
 });
 
 $("#SCM-newSection").on("click", () => {
-    document.getElementById("newItemFormTitle").textContent = `New Section in '${selectedItem.name}'`;
+    const name = shorten(selectedItem.name);
+
+    document.getElementById("newItemFormTitle").textContent = `New Section in '${name}'`;
     (document.getElementById("newItemIconSelect") as HTMLSelectElement).value = "folder";
     document.getElementById("newItemIconPreview").setAttribute("data-feather", "folder");
     feather.replace();
@@ -1018,7 +1033,9 @@ $("#SCM-newSection").on("click", () => {
 });
 
 $("#SCM-editSection").on("click", () => {
-    document.getElementById("editItemFormTitle").textContent = `Edit '${selectedItem.name}'`;
+    const name = shorten(selectedItem.name);
+
+    document.getElementById("editItemFormTitle").textContent = `Edit '${name}'`;
     (document.getElementById("editItemIconSelect") as HTMLSelectElement).value = selectedItem.icon;
     document.getElementById("editItemIconPreview").setAttribute("data-feather", selectedItem.icon);
     (document.getElementById("editItemColorPicker") as HTMLInputElement).value = selectedItem.color;
@@ -1031,7 +1048,9 @@ $("#SCM-editSection").on("click", () => {
 });
 
 $("#SCM-exportAllPages").on("click", () => {
-    document.getElementById("exportModalModalTitle").textContent = selectedItem.name;
+    const name = shorten(selectedItem.name);
+
+    document.getElementById("exportModalModalTitle").textContent = name;
     document.getElementById("exportModalModalIcon").setAttribute("data-feather", selectedItem.icon);
     document.getElementById("exportModalModalIcon").style.color = selectedItem.color;
     document.getElementById("exportModalModalPageCount").textContent = `${selectedItem.getAllPages().length} pages`;
@@ -1041,8 +1060,10 @@ $("#SCM-exportAllPages").on("click", () => {
 });
 
 $("#SCM-deleteSection").on("click", () => {
+    const name = shorten(selectedItem.name);
+
     document.getElementById("deleteItemModalTitle").innerHTML = `
-        Are you sure you want to delete <b>${validatorEscape(selectedItem.name)}</b>?<br><br>All sections and pages inside this section will be deleted, but the pages' actual data will remain in the notes folder.
+        Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>All sections and pages inside this section will be deleted, but the pages' actual data will remain in the notes folder.
     `;
 
     $("#deleteItemModal").modal("show");
@@ -1051,7 +1072,9 @@ $("#SCM-deleteSection").on("click", () => {
 
 // Page context menu items
 $("#PCM-editPage").on("click", () => {
-    document.getElementById("editItemFormTitle").textContent = `Edit '${selectedItem.name}'`;
+    const name = shorten(selectedItem.name);
+
+    document.getElementById("editItemFormTitle").textContent = `Edit '${name}'`;
     (document.getElementById("editItemIconSelect") as HTMLSelectElement).value = selectedItem.icon;
     document.getElementById("editItemIconPreview").setAttribute("data-feather", selectedItem.icon);
     (document.getElementById("editItemColorPicker") as HTMLInputElement).value = selectedItem.color;
@@ -1078,8 +1101,10 @@ $("#PCM-exportMD").on("click", () => {
 });
 
 $("#PCM-deletePage").on("click", () => {
+    const name = shorten(selectedItem.name);
+
     document.getElementById("deleteItemModalTitle").innerHTML = `
-        Are you sure you want to delete <b>${validatorEscape(selectedItem.name)}</b>?<br><br>The page's actual data will remain in the notes folder.
+        Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>The page's actual data will remain in the notes folder.
     `;
 
     $("#deleteItemModal").modal("show");
