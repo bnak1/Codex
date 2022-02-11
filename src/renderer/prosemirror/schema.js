@@ -1,6 +1,7 @@
 import { Schema } from "prosemirror-model";
 import { addListNodes } from "prosemirror-schema-list";
 import { tableNodes } from "prosemirror-tables";
+import { LANGUAGES } from "./languages";
 
 const pDOM = ["p", 0], blockquoteDOM = ["blockquote", 0], hrDOM = ["hr"],
     preDOM = ["pre", ["code", 0]], brDOM = ["br"];
@@ -119,6 +120,7 @@ const nodes = {
             return ["div", {
                 "class": "codeSnippet hljs language-" + node.attrs.params + (node.attrs.collapsed ? " collapsed" : ""),
                 "data-params": node.attrs.params,
+                "data-name": (LANGUAGES[node.attrs.params] == undefined ? node.attrs.params : LANGUAGES[node.attrs.params]),
                 "spellcheck": "false"
             }, ["span", {
                 "class": "snippetCollapser",

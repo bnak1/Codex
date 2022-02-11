@@ -340,6 +340,22 @@ export function buildMenuItems() {
 		}
 	}
 
+    languageMenu1.push(blockTypeItem(schema.nodes.code_block, {
+        title: "Change to code block (auto-detects language)",
+        label: "Other",
+        run: makeCodeBlock("")
+    }));
+    languageMenu2.push(blockTypeItem(schema.nodes.code_block, {
+        title: "Change to code block (auto-detects language)",
+        label: "Other",
+        run: makeCodeBlock("")
+    }));
+    languageMenu3.push(blockTypeItem(schema.nodes.code_block, {
+        title: "Change to code block (auto-detects language)",
+        label: "Other",
+        run: makeCodeBlock("")
+    }));
+
 	const cut = arr => arr.filter(x => x);
 
 	const codeMenu1 = new DropdownSubmenu(languageMenu1, { label: "Code (A-G)" });
