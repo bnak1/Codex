@@ -66,7 +66,7 @@
                             </a>
                             <ul class="nav collapse" id="helpList">
                                 <li class="nav-item my-sidebar-item">
-                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openHelpPage()" title="https://www.codexnotes.com/docs">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.api.openLink('docs')" title="https://www.codexnotes.com/docs">
                                         <div class="row">
                                             <div class="col-auto pr-0"><span data-feather="help-circle"></span></div>
                                             <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
@@ -76,7 +76,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item my-sidebar-item">
-                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openWebsite()" title="https://www.codexnotes.com">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.api.openLink('website')" title="https://www.codexnotes.com">
                                         <div class="row">
                                             <div class="col-auto pr-0"><span data-feather="globe"></span></div>
                                             <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
@@ -86,7 +86,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item my-sidebar-item">
-                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openUpdatesPage()" title="https://www.codexnotes.com/updates">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.api.openLink('changelogs')" title="https://www.codexnotes.com/updates">
                                         <div class="row">
                                             <div class="col-auto pr-0"><span data-feather="file-plus"></span></div>
                                             <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
@@ -96,7 +96,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item my-sidebar-item">
-                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openGithub()" title="https://github.com/jcv8000/Codex">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.api.openLink('github')" title="https://github.com/jcv8000/Codex">
                                         <div class="row">
                                             <div class="col-auto pr-0"><span data-feather="github"></span></div>
                                             <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
@@ -106,7 +106,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item my-sidebar-item">
-                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openGithubIssues()" title="https://github.com/jcv8000/Codex/issues">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.api.openLink('issues')" title="https://github.com/jcv8000/Codex/issues">
                                         <div class="row">
                                             <div class="col-auto pr-0"><span data-feather="alert-circle"></span></div>
                                             <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
@@ -116,7 +116,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item my-sidebar-item">
-                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.openFeedbackForm()" title="https://forms.gle/uDLJpqLbNLcEx1F8A">
+                                    <a href="#" class="nav-link indent unselectable" onclick="renderer.api.openLink('feedback')" title="https://forms.gle/uDLJpqLbNLcEx1F8A">
                                         <div class="row">
                                             <div class="col-auto pr-0"><span data-feather="thumbs-up"></span></div>
                                             <div class="col pr-4" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
@@ -129,7 +129,7 @@
                         </li>
 
                         <li id="updateBlockLI" class="nav-item my-sidebar-item" style="display: none;" title="www.codexnotes.com/download">
-                            <a id="updateBlock" class="nav-link" href="#" draggable="false" onclick="renderer.openDownloadPage()">
+                            <a id="updateBlock" class="nav-link" href="#" draggable="false" onclick="renderer.api.openLink('download')">
                                 <span data-feather="download" style="color: #269700;"></span>
                                 <span id="updateBlockText">New update available</span>
                             </a>
@@ -185,7 +185,7 @@
 
                     <div class="alert alert-success mx-auto" role="alert" style="width: 800px; margin-bottom: 30px">
                         <h2>Thank you for using Codex!</h2>
-                        If you have suggestions/feedback for Codex, <a href="#" onclick="renderer.openFeedbackForm()" title="https://forms.gle/uDLJpqLbNLcEx1F8A">take the Google Forms survey</a>.
+                        If you have suggestions/feedback for Codex, <a href="#" onclick="renderer.api.openLink('feedback')" title="https://forms.gle/uDLJpqLbNLcEx1F8A">take the Google Forms survey</a>.
                         If you have an issue/bug to report, make an Issue on the GitHub page.
                         <!--<h2><span data-feather="user-check" style="width: 30px; height: 30px; margin-right: 10px; vertical-align: -4px;"></span>Optional Feedback Survey</h2>
                             If you would like to share your opinion or give any suggestions, please submit this survey (hosted by Google Forms).
@@ -528,7 +528,7 @@
                                 <input class="form-control" type="color" style="width: 50px" id="newItemColorPicker" title="Choose color...">
                             </div>
                             <div class="col-auto">
-                                <span id="newItemIconHelp" data-feather="help-circle" href="#" onclick="renderer.openFeatherWebsite()" style="color: #9AA6B3; width: 24px; height: 24px; vertical-align: -15px; cursor: pointer;" title="View all icons at feathericons.com"></span>
+                                <span id="newItemIconHelp" data-feather="help-circle" href="#" onclick="renderer.api.openLink('feather')" style="color: #9AA6B3; width: 24px; height: 24px; vertical-align: -15px; cursor: pointer;" title="View all icons at feathericons.com"></span>
                             </div>
                         </div>
                         <label class="form-label" for="newItemNameInput">Name:</label>
@@ -574,7 +574,7 @@
                                 <input class="form-control" type="color" style="width: 50px" id="editItemColorPicker" title="Choose color...">
                             </div>
                             <div class="col-auto">
-                                <span id="editItemIconHelp" data-feather="help-circle" href="#" onclick="renderer.openFeatherWebsite()" style="color: #9AA6B3; width: 24px; height: 24px; vertical-align: -15px; cursor: pointer;" title="View all icons at feathericons.com"></span>
+                                <span id="editItemIconHelp" data-feather="help-circle" href="#" onclick="renderer.api.openLink('feather')" style="color: #9AA6B3; width: 24px; height: 24px; vertical-align: -15px; cursor: pointer;" title="View all icons at feathericons.com"></span>
                             </div>
                         </div>
                         <label class="form-label" for="editItemNameInput">Name:</label>

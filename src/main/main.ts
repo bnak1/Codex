@@ -4,7 +4,6 @@ import validator from "validator";
 import * as semver from "semver";
 import * as remote from "@electron/remote/main";
 import * as contextMenu from "electron-context-menu";
-import * as fs from "fs";
 
 // This makes sure we get a non-cached verison of the "latestversion.txt" file for the update check
 app.commandLine.appendSwitch("disable-http-cache");
@@ -487,55 +486,12 @@ ipcMain.on("defaultDataDir", (event) => {
     event.returnValue = app.getPath("userData");
 });
 
-ipcMain.on("openDataDir", (event, dataDir: string) => {
-    dataDir = dataDir.toString();
-    if (fs.existsSync(dataDir) && fs.lstatSync(dataDir).isDirectory()) {
-        shell.openExternal(dataDir);
-    }
-});
-
 ipcMain.on("isWindowMaximized", (event) => {
     event.returnValue = mainWindow.isMaximized();
 });
 
 ipcMain.on("nativeThemeShouldUseDarkColors", (event) => {
     event.returnValue = nativeTheme.shouldUseDarkColors;
-});
-
-ipcMain.on("openWebsite", () => {
-    shell.openExternal("https://www.codexnotes.com/");
-});
-
-ipcMain.on("openDownloadPage", () => {
-    shell.openExternal("https://www.codexnotes.com/download/");
-});
-
-ipcMain.on("openHelpPage", () => {
-    shell.openExternal("https://www.codexnotes.com/docs/");
-});
-
-ipcMain.on("openUpdatesPage", () => {
-    shell.openExternal("https://www.codexnotes.com/updates/");
-});
-
-ipcMain.on("openGithub", () => {
-    shell.openExternal("https://github.com/jcv8000/Codex");
-});
-
-ipcMain.on("openGithubIssues", () => {
-    shell.openExternal("https://github.com/jcv8000/Codex/issues");
-});
-
-ipcMain.on("openFeedbackForm", () => {
-    shell.openExternal("https://forms.gle/uDLJpqLbNLcEx1F8A");
-});
-
-ipcMain.on("openFeatherWebsite", () => {
-    shell.openExternal("https://www.feathericons.com/");
-});
-
-ipcMain.on("openLicenseWebpage", () => {
-    shell.openExternal("https://creativecommons.org/licenses/by-nc/4.0/");
 });
 
 ipcMain.on("openAboutWindow", () => {

@@ -46,6 +46,7 @@ export type MainAPI = {
     openSaveLocation(): void,
     changeSaveLocation(): void,
     revertToDefaultSaveLocation(): void,
+    openLink(link: "website" | "download" | "docs" | "changelogs" | "github" | "issues" | "feedback" | "feather"): void,
 }
 
 const api: MainAPI = {
@@ -129,6 +130,38 @@ const api: MainAPI = {
     revertToDefaultSaveLocation: (): void => {
         fs.writeFileSync(defaultSaveLocation + "/saveLocation.txt", defaultSaveLocation, "utf-8");
         ipcRenderer.send("restart");
+    },
+
+    openLink: (link: "website" | "download" | "docs" | "changelogs" | "github" | "issues" | "feedback" | "feather" | "license"): void => {
+        switch (link) {
+            case "website":
+                shell.openExternal("https://www.codexnotes.com/");
+                break;
+            case "download":
+                shell.openExternal("https://www.codexnotes.com/download/");
+                break;
+            case "docs":
+                shell.openExternal("https://www.codexnotes.com/docs/");
+                break;
+            case "changelogs":
+                shell.openExternal("https://www.codexnotes.com/updates/");
+                break;
+            case "github":
+                shell.openExternal("https://github.com/jcv8000/Codex");
+                break;
+            case "issues":
+                shell.openExternal("https://github.com/jcv8000/Codex/issues");
+                break;
+            case "feedback":
+                shell.openExternal("https://forms.gle/uDLJpqLbNLcEx1F8A");
+                break;
+            case "feather":
+                shell.openExternal("https://www.feathericons.com/");
+                break;
+            case "license":
+                shell.openExternal("https://creativecommons.org/licenses/by-nc/4.0/");
+                break;
+        }
     }
 };
 

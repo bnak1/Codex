@@ -1087,38 +1087,6 @@ $("#PCM-deletePage").on("click", () => {
 
 // #endregion
 
-// #region EXTERNAL LINK FUNCTIONS
-
-export function openFeedbackForm(): void {
-	api.ipcSend("openFeedbackForm");
-}
-
-export function openDownloadPage(): void {
-	api.ipcSend("openDownloadPage");
-}
-
-export function openWebsite(): void {
-	api.ipcSend("openWebsite");
-}
-
-export function openUpdatesPage(): void {
-	api.ipcSend("openUpdatesPage");
-}
-
-export function openGithub(): void {
-	api.ipcSend("openGithub");
-}
-
-export function openGithubIssues(): void {
-	api.ipcSend("openGithubIssues");
-}
-
-export function openFeatherWebsite(): void {
-	api.ipcSend("openFeatherWebsite");
-}
-
-// #endregion
-
 // #region IPC HANDLERS
 
 api.ipcHandle("updateAvailable", (event: any, newVersion: string) => {
