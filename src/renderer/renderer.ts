@@ -64,7 +64,7 @@ function init(): void {
         }
     });
 
-    prefs = JSON.parse(api.getPrefs());
+    prefs = deserialize<UserPrefs>(api.getPrefs(), UserPrefs);
 
     save = deserialize<Save>(api.getSave(), Save);
     
@@ -165,13 +165,6 @@ function init(): void {
     document.execCommand("enableInlineTableEditing", false, "false");
 
 
-    // first time use popup
-    if (prefs.firstUse == true) {
-        //probably first use
-        setTimeout(() => { $("#firstUseModal").modal("show"); }, 500);
-    }
-
-
     // Sidebar resizer events
     const sidebarResizer = document.getElementById("sidebarResizer");
     sidebarResizer.addEventListener("mousedown", () => {
@@ -221,6 +214,22 @@ function init(): void {
 
     // Feather icons
     feather.replace();
+
+
+    if (api.showFirstUseModal) {
+        setTimeout(() => { $("#firstUseModal").modal("show"); }, 500);
+
+        if (api.showWhatsNewModal) {
+            $("#firstUseModal").on("hidden.bs.modal", () => {
+                $("#whatsNewModal").modal("show");
+            });
+        }
+    }
+    else {
+        if (api.showWhatsNewModal) {
+            $("#whatsNewModal").modal("show");
+        }
+    }
 }
 
 init();
@@ -291,7 +300,6 @@ export function applyPrefsAtStart(): void {
     updateZoom();
 
     $("#exportBreakPageOnH1Check").prop("checked", prefs.pdfBreakOnH1);
-    $("#darkmodePDFCheck").prop("checked", prefs.pdfDarkMode);
     $("#openPDFonExportCheck").prop("checked", prefs.openPDFonExport);
 
     document.getElementById("dataDirInput").innerText = api.saveLocation();
@@ -392,7 +400,6 @@ export function applyPrefsRuntime(needsRestart = false): void {
     prefs.tabSize = parseInt((document.getElementById("tabSizeSelect") as HTMLSelectElement).value);
 
     prefs.pdfBreakOnH1 = $("#exportBreakPageOnH1Check").is(":checked");
-    prefs.pdfDarkMode = $("#darkmodePDFCheck").is(":checked");
     prefs.openPDFonExport = $("#openPDFonExportCheck").is(":checked");
 
     api.savePrefs(prefs);
@@ -770,11 +777,6 @@ document.getElementById("newNotebookBtn").addEventListener("click", () => {
     $("#newItemModal").modal("show");
 });
 
-// FIRST USE MODAL
-$("#firstUseModal").on("hidden.bs.modal", () => {
-    prefs.firstUse = false;
-});
-
 // NEW ITEM MODAL
 document.getElementById("newItemForm").addEventListener("submit", (e) => {
     e.preventDefault(); // Prevents the page from trying to send the data to a url
@@ -1136,6 +1138,17 @@ api.ipcHandle("console.error", (event: any, text: string) => {
 
 api.ipcHandle("prefsShowMenuBar", (event: any, value: boolean) => {
     prefs.showMenuBar = value;
+});
+
+api.ipcHandle("newNotebook", () => {
+    createNewItemMode = NotebookItemType.NOTEBOOK;
+    selectedItem = null;
+
+    $("#newItemModal").modal("show");
+});
+
+api.ipcHandle("whatsNew", () => {
+    $("#whatsNewModal").modal("show");
 });
 
 api.ipcHandle("onClose", () => {

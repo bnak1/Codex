@@ -210,7 +210,7 @@ normalMenu.append(new MenuItem({
         {
             label: "New Notebook",
             accelerator: "CmdOrCtrl+N",
-            click: () => executeJavascriptInRenderer("$('#newNotebookModal').modal('show')")
+            click: () => mainWindow.webContents.send("newNotebook")
         },
         {
             type: "separator"
@@ -258,7 +258,11 @@ normalMenu.append(new MenuItem({
             click: () => shell.openExternal("https://www.codexnotes.com/")
         },
         {
-            label: "Update notes",
+            label: "What's New",
+            click: () => mainWindow.webContents.send("whatsNew")
+        },
+        {
+            label: "All Changelogs",
             click: () => shell.openExternal("https://www.codexnotes.com/updates/")
         },
         {
@@ -392,7 +396,11 @@ editingMenu.append(new MenuItem({
             click: () => shell.openExternal("https://www.codexnotes.com/")
         },
         {
-            label: "Update notes",
+            label: "What's New",
+            click: () => mainWindow.webContents.send("whatsNew")
+        },
+        {
+            label: "All Changelogs",
             click: () => shell.openExternal("https://www.codexnotes.com/updates/")
         },
         {

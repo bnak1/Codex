@@ -1,12 +1,16 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent, shell } from "electron";
 import * as fs from "fs";
 import * as remote from "@electron/remote";
-import {Titlebar, Color} from "@treverix/custom-electron-titlebar";
+import { Titlebar, Color } from "@treverix/custom-electron-titlebar";
 import * as hljs from "highlight.js";
+import { compare } from "semver";
 import { deserialize } from "typescript-json-serializer";
 import { UserPrefs } from "../common/UserPrefs";
 import { Save } from "../common/Save";
 import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
+
+
+const version = "2.0.0";
 
 let save: Save = null;
 let prefs: UserPrefs = null;
@@ -26,6 +30,8 @@ else {
 }
 
 export type MainAPI = {
+    showFirstUseModal: boolean,
+    showWhatsNewModal: boolean,
 	ipcHandle(channel: string, listener: (event: any, ...args: any[]) => void): void,
     ipcSend(channel: string, ...args: any[]): void,
     ipcSendSync(channel: string, ...args: any[]): any,
@@ -43,6 +49,11 @@ export type MainAPI = {
 }
 
 const api: MainAPI = {
+
+    showFirstUseModal: false,
+
+    showWhatsNewModal: false,
+
 	ipcHandle: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => {
         ipcRenderer.on(channel, listener);
     },
@@ -126,50 +137,7 @@ const api: MainAPI = {
 if (fs.existsSync(defaultSaveLocation + "/prefs.json")) {
     try {
         const json = fs.readFileSync(defaultSaveLocation + "/prefs.json", "utf-8").toString();
-        prefs = JSON.parse(json);
-
-        if (prefs.theme === undefined)
-            prefs.theme = 0;
-
-        if (prefs.codeStyle === undefined)
-            prefs.codeStyle = "atom-one-dark";
-
-        if (prefs.accentColor === undefined)
-            prefs.accentColor = "#FF7A27";
-
-        if (prefs.defaultZoom === undefined)
-            prefs.defaultZoom = 1.0;
-
-        if (prefs.defaultMaximized === undefined)
-            prefs.defaultMaximized = false;
-
-        if (prefs.pdfBreakOnH1 === undefined)
-            prefs.pdfBreakOnH1 = false;
-
-        if (prefs.pdfDarkMode === undefined)
-            prefs.pdfDarkMode = false;
-
-        if (prefs.openPDFonExport === undefined)
-            prefs.openPDFonExport = true;
-
-        if (prefs.tabSize === undefined)
-            prefs.tabSize = 4;
-
-        if (prefs.sidebarWidth === undefined)
-            prefs.sidebarWidth = 275;
-
-        if (prefs.showCodeOverlay === undefined)
-            prefs.showCodeOverlay = true;
-
-        if (prefs.codeWordWrap === undefined)
-            prefs.codeWordWrap = false;
-
-        if (prefs.firstUse === undefined)
-            prefs.firstUse = true;
-
-        if (prefs.showMenuBar === undefined)
-            prefs.showMenuBar = true;
-
+        prefs = deserialize<UserPrefs>(json, UserPrefs);
 
         canSavePrefs = true;
     }
@@ -182,7 +150,15 @@ else {
     saveLocation = defaultSaveLocation;
     canSavePrefs = true;
     api.savePrefs(prefs);
+
+    api.showFirstUseModal = true;
 }
+
+if (compare(version, prefs.lastUseVersion) == 1) {
+    api.showWhatsNewModal = true;
+    prefs.lastUseVersion = version;
+}
+
 // LOAD SAVE
 
 if (fs.existsSync(saveLocation + "/save.json")) {
@@ -263,10 +239,8 @@ function convertOldSave(oldSave: any): Save {
 
 function isValidDir(path: string): boolean {
     if (fs.existsSync(path) && fs.lstatSync(path).isDirectory()) {
-        console.log("valid dir");
         return true;
     }
-    console.log("invalid dir");
     return false;
 }
 
