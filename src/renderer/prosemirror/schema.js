@@ -122,7 +122,8 @@ const nodes = {
                 "spellcheck": "false"
             }, ["span", {
                 "class": "snippetCollapser",
-                "title": "Collapse"
+                "title": "Collapse",
+                "contenteditable": "false"
             }, (node.attrs.collapsed ? "∨" : "∧")], ["div", 0]];
         }
     },
