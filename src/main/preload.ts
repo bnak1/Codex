@@ -114,7 +114,7 @@ const api: MainAPI = {
 
     openSaveLocation: (): void => {
         if (isValidDir(saveLocation))
-            shell.openExternal(saveLocation, {activate: true});
+            shell.openPath(saveLocation);
     },
 
     changeSaveLocation: (): void => {
