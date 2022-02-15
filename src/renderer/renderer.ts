@@ -840,15 +840,6 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
 
         api.saveData(save);
         processNotebooks();
-
-        document.getElementById("newItemNameInput").classList.remove("is-invalid");
-        (document.getElementById("newItemNameInput") as HTMLInputElement).value = "";
-        (document.getElementById("newItemColorPicker") as HTMLInputElement).value = "#000000";
-        (document.getElementById("newItemIconSelect") as HTMLSelectElement).value = "book";
-        document.getElementById("newItemIconPreview").setAttribute("data-feather", "book");
-        document.getElementById("newItemIconPreview").style.color = "black";
-
-        feather.replace();
     }
     else {
         document.getElementById("newItemNameInput").classList.add("is-invalid");
@@ -861,6 +852,12 @@ query("#newItemModal").on("shown.bs.modal", () => {
 
 query("#newItemModal").on("hidden.bs.modal", () => {
     document.getElementById("newItemNameInput").classList.remove("is-invalid");
+    (document.getElementById("newItemNameInput") as HTMLInputElement).value = "";
+    (document.getElementById("newItemColorPicker") as HTMLInputElement).value = "#000000";
+    (document.getElementById("newItemIconSelect") as HTMLSelectElement).value = "book";
+    document.getElementById("newItemIconPreview").setAttribute("data-feather", "book");
+    document.getElementById("newItemIconPreview").style.color = "black";
+    feather.replace();
 });
 
 // EDIT ITEM MODAL
