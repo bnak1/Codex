@@ -120,41 +120,41 @@ function init(): void {
     // TOOLTIPS
 
     document.getElementById("revertToDefaultDataDirBtnTooltip").title = "Revert to" + defaultSaveLocation;
-    $("#revertToDefaultDataDirBtnTooltip").tooltip({
+    query("#revertToDefaultDataDirBtnTooltip").tooltip({
         trigger: "hover"
     });
-    $("#dataDirButton").tooltip({
+    query("#dataDirButton").tooltip({
         trigger: "hover"
     });
 
-    $("#newNotebookBtn").tooltip({
+    query("#newNotebookBtn").tooltip({
         boundary: document.documentElement,
         container: "body",
         placement: "right",
         trigger: "hover"
     });
 
-    $("#newNotebookColorPicker").tooltip({
+    query("#newItemColorPicker").tooltip({
         trigger: "hover",
         placement: "bottom"
     });
 
-    $("#accentColorPicker").tooltip({
+    query("#accentColorPicker").tooltip({
         trigger: "hover",
         placement: "bottom"
     });
 
-    $("#editNotebookColorPicker").tooltip({
+    query("#editItemColorPicker").tooltip({
         trigger: "hover",
         placement: "bottom"
     });
 
-    $("#newNotebookIconHelp").tooltip({
+    query("#newItemIconHelp").tooltip({
         trigger: "hover",
         placement: "right"
     });
 
-    $("#editNotebookIconHelp").tooltip({
+    query("#editItemIconHelp").tooltip({
         trigger: "hover",
         placement: "right"
     });
@@ -217,17 +217,17 @@ function init(): void {
 
 
     if (api.showFirstUseModal) {
-        setTimeout(() => { $("#firstUseModal").modal("show"); }, 500);
+        setTimeout(() => { query("#firstUseModal").modal("show"); }, 500);
 
         if (api.showWhatsNewModal) {
-            $("#firstUseModal").on("hidden.bs.modal", () => {
-                $("#whatsNewModal").modal("show");
+            query("#firstUseModal").on("hidden.bs.modal", () => {
+                query("#whatsNewModal").modal("show");
             });
         }
     }
     else {
         if (api.showWhatsNewModal) {
-            $("#whatsNewModal").modal("show");
+            query("#whatsNewModal").modal("show");
         }
     }
 }
@@ -237,6 +237,17 @@ init();
 // #endregion
 
 // #region LOGIC FUNCTIONS
+
+// JQuery $("") wrapper to output an error if it doesn't find an element
+function query(text: string): JQuery<HTMLElement> {
+    const result = $(text);
+
+    if (result.length === 0) {
+        console.error(`JQuery search for '${text}' did not find an element.`);
+    }
+
+    return result;
+}
 
 export function applyPrefsAtStart(): void {
     (document.getElementById("themeSelect") as HTMLSelectElement).value = prefs.theme.toString();
@@ -299,8 +310,8 @@ export function applyPrefsAtStart(): void {
     zoomLevel = prefs.defaultZoom;
     updateZoom();
 
-    $("#exportBreakPageOnH1Check").prop("checked", prefs.pdfBreakOnH1);
-    $("#openPDFonExportCheck").prop("checked", prefs.openPDFonExport);
+    query("#exportBreakPageOnH1Check").prop("checked", prefs.pdfBreakOnH1);
+    query("#openPDFonExportCheck").prop("checked", prefs.openPDFonExport);
 
     document.getElementById("dataDirInput").innerText = api.saveLocation();
 
@@ -308,25 +319,25 @@ export function applyPrefsAtStart(): void {
         (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = true;
         document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "none";
         document.getElementById("revertToDefaultDataDirBtnTooltip").title = "You're already in the default location.";
-        $("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
-        $("#revertToDefaultDataDirBtnTooltip").tooltip();
+        query("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
+        query("#revertToDefaultDataDirBtnTooltip").tooltip();
     }
     else {
         (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = false;
         document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "auto";
         document.getElementById("revertToDefaultDataDirBtnTooltip").title = "Revert to " + defaultSaveLocation;
-        $("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
-        $("#revertToDefaultDataDirBtnTooltip").tooltip();
+        query("#revertToDefaultDataDirBtnTooltip").tooltip("dispose");
+        query("#revertToDefaultDataDirBtnTooltip").tooltip();
     }
 
     resizeSidebar(prefs.sidebarWidth);
 
-    $("#showLanguageOverlayCheck").prop("checked", prefs.showCodeOverlay);
+    query("#showLanguageOverlayCheck").prop("checked", prefs.showCodeOverlay);
     if (prefs.showCodeOverlay === true) {
         (document.getElementById("codeOverlayLink") as HTMLLinkElement).href = "../css/codeoverlay.css";
     }
 
-    $("#codeWordWrapCheck").prop("checked", prefs.codeWordWrap);
+    query("#codeWordWrapCheck").prop("checked", prefs.codeWordWrap);
     if (prefs.codeWordWrap === true) {
         document.documentElement.style.setProperty("--code-white-space", "pre-wrap");
     }
@@ -399,8 +410,8 @@ export function applyPrefsRuntime(needsRestart = false): void {
 
     prefs.tabSize = parseInt((document.getElementById("tabSizeSelect") as HTMLSelectElement).value);
 
-    prefs.pdfBreakOnH1 = $("#exportBreakPageOnH1Check").is(":checked");
-    prefs.openPDFonExport = $("#openPDFonExportCheck").is(":checked");
+    prefs.pdfBreakOnH1 = query("#exportBreakPageOnH1Check").is(":checked");
+    prefs.openPDFonExport = query("#openPDFonExportCheck").is(":checked");
 
     api.savePrefs(prefs);
 
@@ -410,7 +421,7 @@ export function applyPrefsRuntime(needsRestart = false): void {
 
     prefs.sidebarWidth = sidebarWidth;
 
-    prefs.showCodeOverlay = $("#showLanguageOverlayCheck").is(":checked");
+    prefs.showCodeOverlay = query("#showLanguageOverlayCheck").is(":checked");
     if (prefs.showCodeOverlay === true) {
         (document.getElementById("codeOverlayLink") as HTMLLinkElement).href = "../css/codeoverlay.css";
     }
@@ -418,7 +429,7 @@ export function applyPrefsRuntime(needsRestart = false): void {
         (document.getElementById("codeOverlayLink") as HTMLLinkElement).href = "";
     }
 
-    prefs.codeWordWrap = $("#codeWordWrapCheck").is(":checked");
+    prefs.codeWordWrap = query("#codeWordWrapCheck").is(":checked");
     if (prefs.codeWordWrap === true) {
         document.documentElement.style.setProperty("--code-white-space", "pre-wrap");
     }
@@ -781,7 +792,7 @@ document.getElementById("newNotebookBtn").addEventListener("click", () => {
     createNewItemMode = NotebookItemType.NOTEBOOK;
     selectedItem = null;
 
-    $("#newItemModal").modal("show");
+    query("#newItemModal").modal("show");
 });
 
 // NEW ITEM MODAL
@@ -825,7 +836,7 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
             }
         }
 
-        $("#newItemModal").modal("hide");
+        query("#newItemModal").modal("hide");
 
         api.saveData(save);
         processNotebooks();
@@ -844,11 +855,11 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
     }
 });
 
-$("#newItemModal").on("shown.bs.modal", () => {
+query("#newItemModal").on("shown.bs.modal", () => {
     document.getElementById("newItemNameInput").focus();
 });
 
-$("#newItemModal").on("hidden.bs.modal", () => {
+query("#newItemModal").on("hidden.bs.modal", () => {
     document.getElementById("newItemNameInput").classList.remove("is-invalid");
 });
 
@@ -861,7 +872,7 @@ document.getElementById("editItemForm").addEventListener("submit", (e) => {
     const newIcon = (document.getElementById("editItemIconSelect") as HTMLSelectElement).value;
 
     if (newName !== "") {
-        $("#editItemModal").modal("hide");
+        query("#editItemModal").modal("hide");
 
         selectedItem.name = newName;
         selectedItem.color = newColor;
@@ -877,16 +888,16 @@ document.getElementById("editItemForm").addEventListener("submit", (e) => {
     }
 });
 
-$("#editItemModal").on("shown.bs.modal", () => {
+query("#editItemModal").on("shown.bs.modal", () => {
     document.getElementById("editItemNameInput").focus();
 });
 
-$("#editItemModal").on("hidden.bs.modal", () => {
+query("#editItemModal").on("hidden.bs.modal", () => {
     document.getElementById("editItemNameInput").classList.remove("is-invalid");
 });
 
 // DELETE ITEM MODAL
-$("#deleteItemButton").on("click", () => {
+query("#deleteItemButton").on("click", () => {
 
     saveOpenedPage();
     showUIPage("homePage");
@@ -932,12 +943,12 @@ $("#deleteItemButton").on("click", () => {
         }
     }
     
-    $("#deleteItemModal").modal("hide");
+    query("#deleteItemModal").modal("hide");
 });
 
 
 // Notebook context menu items
-$("#NBCM-newPage").on("click", () => {
+query("#NBCM-newPage").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("newItemFormTitle").textContent = `New Page in '${name}'`;
@@ -945,13 +956,13 @@ $("#NBCM-newPage").on("click", () => {
     document.getElementById("newItemIconPreview").setAttribute("data-feather", "file-text");
     feather.replace();
     
-    $("#newItemModal").modal("show");
+    query("#newItemModal").modal("show");
     document.getElementById("newItemNameInput").focus();
 
     createNewItemMode = NotebookItemType.PAGE;
 });
 
-$("#NBCM-newSection").on("click", () => {
+query("#NBCM-newSection").on("click", () => {
     const name = shorten(selectedItem.name);
     
     document.getElementById("newItemFormTitle").textContent = `New Section in '${name}'`;
@@ -959,13 +970,13 @@ $("#NBCM-newSection").on("click", () => {
     document.getElementById("newItemIconPreview").setAttribute("data-feather", "folder");
     feather.replace();
 
-    $("#newItemModal").modal("show");
+    query("#newItemModal").modal("show");
     document.getElementById("newItemNameInput").focus();
 
     createNewItemMode = NotebookItemType.SECTION;
 });
 
-$("#NBCM-editNotebook").on("click", () => {
+query("#NBCM-editNotebook").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("editItemFormTitle").textContent = `Edit '${name}'`;
@@ -976,11 +987,11 @@ $("#NBCM-editNotebook").on("click", () => {
     (document.getElementById("editItemNameInput") as HTMLInputElement).value = selectedItem.name;
     feather.replace();
 
-    $("#editItemModal").modal("show");
+    query("#editItemModal").modal("show");
     document.getElementById("editItemNameInput").focus();
 });
 
-$("#NBCM-exportAllPages").on("click", () => {
+query("#NBCM-exportAllPages").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("exportModalModalTitle").textContent = name;
@@ -989,22 +1000,22 @@ $("#NBCM-exportAllPages").on("click", () => {
     document.getElementById("exportModalModalPageCount").textContent = `${selectedItem.getAllPages().length} page(s)`;
     feather.replace();
 
-    $("#exportModal").modal("show");
+    query("#exportModal").modal("show");
 });
 
-$("#NBCM-deleteNotebook").on("click", () => {
+query("#NBCM-deleteNotebook").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("deleteItemModalTitle").innerHTML = `
         Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>All sections and pages inside this notebook will be deleted, but the pages' actual data will remain in the notes folder.
     `;
 
-    $("#deleteItemModal").modal("show");
+    query("#deleteItemModal").modal("show");
 });
 
 
 // Section context menu items
-$("#SCM-newPage").on("click", () => {
+query("#SCM-newPage").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("newItemFormTitle").textContent = `New Page in '${name}'`;
@@ -1012,13 +1023,13 @@ $("#SCM-newPage").on("click", () => {
     document.getElementById("newItemIconPreview").setAttribute("data-feather", "file-text");
     feather.replace();
     
-    $("#newItemModal").modal("show");
+    query("#newItemModal").modal("show");
     document.getElementById("newItemNameInput").focus();
 
     createNewItemMode = NotebookItemType.PAGE;
 });
 
-$("#SCM-newSection").on("click", () => {
+query("#SCM-newSection").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("newItemFormTitle").textContent = `New Section in '${name}'`;
@@ -1026,13 +1037,13 @@ $("#SCM-newSection").on("click", () => {
     document.getElementById("newItemIconPreview").setAttribute("data-feather", "folder");
     feather.replace();
 
-    $("#newItemModal").modal("show");
+    query("#newItemModal").modal("show");
     document.getElementById("newItemNameInput").focus();
 
     createNewItemMode = NotebookItemType.SECTION;
 });
 
-$("#SCM-editSection").on("click", () => {
+query("#SCM-editSection").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("editItemFormTitle").textContent = `Edit '${name}'`;
@@ -1043,11 +1054,11 @@ $("#SCM-editSection").on("click", () => {
     (document.getElementById("editItemNameInput") as HTMLInputElement).value = selectedItem.name;
     feather.replace();
 
-    $("#editItemModal").modal("show");
+    query("#editItemModal").modal("show");
     document.getElementById("editItemNameInput").focus();
 });
 
-$("#SCM-exportAllPages").on("click", () => {
+query("#SCM-exportAllPages").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("exportModalModalTitle").textContent = name;
@@ -1056,22 +1067,22 @@ $("#SCM-exportAllPages").on("click", () => {
     document.getElementById("exportModalModalPageCount").textContent = `${selectedItem.getAllPages().length} pages`;
     feather.replace();
 
-    $("#exportModal").modal("show");
+    query("#exportModal").modal("show");
 });
 
-$("#SCM-deleteSection").on("click", () => {
+query("#SCM-deleteSection").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("deleteItemModalTitle").innerHTML = `
         Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>All sections and pages inside this section will be deleted, but the pages' actual data will remain in the notes folder.
     `;
 
-    $("#deleteItemModal").modal("show");
+    query("#deleteItemModal").modal("show");
 });
 
 
 // Page context menu items
-$("#PCM-editPage").on("click", () => {
+query("#PCM-editPage").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("editItemFormTitle").textContent = `Edit '${name}'`;
@@ -1082,32 +1093,32 @@ $("#PCM-editPage").on("click", () => {
     (document.getElementById("editItemNameInput") as HTMLInputElement).value = selectedItem.name;
     feather.replace();
 
-    $("#editItemModal").modal("show");
+    query("#editItemModal").modal("show");
     document.getElementById("editItemNameInput").focus();
 });
 
-$("#PCM-favoritePage").on("click", () => {
+query("#PCM-favoritePage").on("click", () => {
     if (selectedItem.type === NotebookItemType.PAGE) {
         selectedItem.favorite = !selectedItem.favorite;
     }
 });
 
-$("#PCM-exportPDF").on("click", () => {
+query("#PCM-exportPDF").on("click", () => {
     //open save dialog
 });
 
-$("#PCM-exportMD").on("click", () => {
+query("#PCM-exportMD").on("click", () => {
     //open save dialog
 });
 
-$("#PCM-deletePage").on("click", () => {
+query("#PCM-deletePage").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("deleteItemModalTitle").innerHTML = `
         Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>The page's actual data will remain in the notes folder.
     `;
 
-    $("#deleteItemModal").modal("show");
+    query("#deleteItemModal").modal("show");
 });
 
 // #endregion
@@ -1117,7 +1128,7 @@ $("#PCM-deletePage").on("click", () => {
 api.ipcHandle("updateAvailable", (event: any, newVersion: string) => {
     setTimeout(() => {
         document.getElementById("updateBlockText").textContent = `New update available (${newVersion})`;
-        $("#updateBlockLI").fadeIn();
+        query("#updateBlockLI").fadeIn();
     }, 1000);
 });
 
@@ -1137,11 +1148,11 @@ api.ipcHandle("newNotebook", () => {
     createNewItemMode = NotebookItemType.NOTEBOOK;
     selectedItem = null;
 
-    $("#newItemModal").modal("show");
+    query("#newItemModal").modal("show");
 });
 
 api.ipcHandle("whatsNew", () => {
-    $("#whatsNewModal").modal("show");
+    query("#whatsNewModal").modal("show");
 });
 
 api.ipcHandle("onClose", () => {
