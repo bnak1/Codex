@@ -1,6 +1,6 @@
 <p align="center">
-	<img src="https://www.codexnotes.com/img/logo.png#gh-light-mode-only" width="400" />
-    <img src="https://www.codexnotes.com/img/logo-light.png#gh-dark-mode-only" width="400" />
+	<img src="./assets/img/logo.png#gh-light-mode-only" width="400" />
+    <img src="./assets/img/logo-light.png#gh-dark-mode-only" width="400" />
     <br>
 	<img alt="GitHub all releases" src="https://img.shields.io/github/downloads/jcv8000/Codex/total?label=Downloads">
 	<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/jcv8000/Codex?label=Release">
