@@ -943,6 +943,10 @@ a.action-menu-item {
     cursor: pointer;
 }
 
+a.action-menu-item:hover {
+    text-decoration: none;
+}
+
 math-inline .math-render {
     font-size: 0.95em;
 }
