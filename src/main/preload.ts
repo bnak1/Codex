@@ -261,6 +261,8 @@ function convertOldSave(oldSave: any): Save {
             page.fileName = oldPage["fileName"];
             page.favorite = oldPage["favorite"];
 
+            page.parentId = nb.id;
+
             nb.children.push(page);
         });
 

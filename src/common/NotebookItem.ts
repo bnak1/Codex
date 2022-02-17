@@ -26,6 +26,9 @@ export class NotebookItem {
     icon = "book";
 
     @JsonProperty({ required: false })
+    parentId = "";
+
+    @JsonProperty({ required: false })
     fileName: string;
 
     @JsonProperty({ required: false })
@@ -78,37 +81,5 @@ export class NotebookItem {
         });
 
         return list;
-    }
-
-    static getParent(notebookList: NotebookItem[], item: NotebookItem): NotebookItem {
-
-        let parent: NotebookItem = null;
-        let done = false;
-
-        function recurseSearch(x: NotebookItem) {
-
-            if (done === false) {
-                if (x.type === NotebookItemType.NOTEBOOK || x.type === NotebookItemType.SECTION) {
-                    if (x.children.indexOf(item) > -1) {
-                        parent = x;
-                        done = true;
-                        return;
-                    }
-                    else {
-                        x.children.forEach(child => {
-                            recurseSearch(child);
-                        });
-                    }
-                }
-            }
-            
-        }
-
-        notebookList.forEach(nb => {
-            if (done === false)
-                recurseSearch(nb);
-        });
-
-        return parent;
     }
 }

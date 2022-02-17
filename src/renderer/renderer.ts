@@ -820,6 +820,7 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
                 const parent = selectedItem;
                 if (parent.type !== NotebookItemType.PAGE) {
                     parent.children.push(section);
+                    section.parentId = parent.id;
                 }
             }
         }
@@ -832,6 +833,7 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
                 const parent = selectedItem;
                 if (parent.type !== NotebookItemType.PAGE) {
                     parent.children.push(page);
+                    page.parentId = parent.id;
                 }
             }
         }
@@ -918,7 +920,7 @@ query("#deleteItemButton").on("click", () => {
         }
     }
     else {
-        const parent = NotebookItem.getParent(save.notebooks, selectedItem);
+        const parent = idToObjectMap.get(selectedItem.parentId);
 
         if (parent != null) {
             try {
