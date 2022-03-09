@@ -1,20 +1,217 @@
 import { app, BrowserWindow, dialog, net, MessageBoxOptions, ipcMain, nativeTheme, Menu, MenuItem, shell } from "electron";
 import * as path from "path";
+import * as fs from "fs";
 import validator from "validator";
 import * as semver from "semver";
 import * as remote from "@electron/remote/main";
 import * as contextMenu from "electron-context-menu";
+import { deserialize } from "typescript-json-serializer";
+import { UserPrefs } from "../common/UserPrefs";
+import { Save } from "../common/Save";
+import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
+
+const currentVersion = "2.0.0";
+let mainWindow: BrowserWindow = null;
+
+let save: Save = null;
+let prefs: UserPrefs = null;
+
+let canSavePrefs = false;
+let canSaveSave = false;
+
+let showFirstUseModal = false;
+let showWhatsNewModal = false;
+
+const defaultSaveLocation = app.getPath("userData");
+let saveLocation = "";
+
+// #region Init and prefs/save/page functions 
+
+function init() {
+
+    // Check for a different save location
+
+    if (!fs.existsSync(defaultSaveLocation + "/saveLocation.txt")) {
+        saveLocation = defaultSaveLocation;
+        fs.writeFileSync(defaultSaveLocation + "/saveLocation.txt", defaultSaveLocation, "utf-8");
+    }
+    else {
+        saveLocation = fs.readFileSync(defaultSaveLocation + "/saveLocation.txt", "utf-8").toString();
+    }
+
+
+    // LOAD PREFS
+
+    if (fs.existsSync(defaultSaveLocation + "/prefs.json")) {
+        try {
+            const json = fs.readFileSync(defaultSaveLocation + "/prefs.json", "utf-8").toString();
+            prefs = deserialize<UserPrefs>(json, UserPrefs);
+
+            canSavePrefs = true;
+        }
+        catch (err) {
+            errorLoadingData(`Your prefs.json file in '${defaultSaveLocation}' could not be parsed. Check the prefs.json file for issues or try deleting it.\n\n${err}`);
+        }
+    }
+    else {
+        prefs = new UserPrefs();
+        saveLocation = defaultSaveLocation;
+        canSavePrefs = true;
+        savePrefs();
+
+        showFirstUseModal = true;
+    }
+
+    if (semver.compare(currentVersion, prefs.lastUseVersion) == 1) {
+        showWhatsNewModal = true;
+        prefs.lastUseVersion = currentVersion;
+    }
+
+
+    // LOAD SAVE
+
+    if (fs.existsSync(saveLocation + "/save.json")) {
+        const json = fs.readFileSync(saveLocation + "/save.json", "utf-8").toString();
+
+        // Check for old save from before 2.0.0
+        try {
+            const testObject = JSON.parse(json);
+            if (testObject["version"] === undefined) {
+                try {
+                    save = convertOldSave(testObject);
+                    canSaveSave = true;
+                }
+                catch (err) {
+                    errorLoadingData(`Your save.json file in '${saveLocation}' could not be converted to the new format or is corrupted. Check the save.json file for issues, and/or report this problem to the GitHub Issues page.\n\n${err}`);
+                }
+            }
+            else {
+                try {
+                    save = deserialize<Save>(json, Save);
+                    canSaveSave = true;
+                }
+                catch (err) {
+                    errorLoadingData(`Your save.json file in '${saveLocation}' could not be parsed. Check the save.json file for issues, and/or report this problem to the GitHub Issues page.\n\n${err}`);
+                }
+            }
+        }
+        catch (err) {
+            errorLoadingData(`Your save.json file in '${saveLocation}' could not be parsed. Check the save.json file for issues, and/or report this problem to the GitHub Issues page.\n\n${err}`);
+        }
+
+        saveSave();
+    }
+    else {
+        save = new Save();
+
+        canSaveSave = true;
+
+        saveSave();
+    }
+
+    if (!fs.existsSync(saveLocation + "/notes/")) {
+        fs.mkdirSync(saveLocation + "/notes/");
+    }
+
+    if (!fs.existsSync(defaultSaveLocation + "/userStyles.css")) {
+        fs.writeFileSync(defaultSaveLocation + "/userStyles.css", "/*\n    Enter custom CSS rules for Codex in this file.\n    Use Inspect Element in the DevTools (Ctrl-Shift-I) in Codex to find id's and classes.\n*/");
+    }
+
+
+    createWindow();
+}
+
+function savePrefs() {
+    if (canSavePrefs == true) {
+        fs.writeFileSync(defaultSaveLocation + "/prefs.json", JSON.stringify(prefs, null, 4), "utf-8");
+    }
+}
+
+function saveSave() {
+    if (canSaveSave == true) {
+        fs.writeFileSync(saveLocation + "/save.json", JSON.stringify(save, null, 4), "utf-8");
+    }
+}
+
+function loadPageData(fileName: string): string {
+    if (!fileName.includes("/") && !fileName.includes("\\")) {
+        if (fs.existsSync(saveLocation + "/notes/" + fileName)) {
+            return fs.readFileSync(saveLocation + "/notes/" + fileName, "utf-8").toString();
+        }
+    }
+    return "";
+}
+
+function savePageData(fileName: string, docObject: { [key: string]: any }): void {
+    if (!fileName.includes("/") && !fileName.includes("\\") && canSaveSave == true) {
+        fs.writeFileSync(saveLocation + "/notes/" + fileName, JSON.stringify(docObject), "utf-8");
+    }
+}
+
+function openSaveLocation() {
+    if (isValidDir(saveLocation))
+        shell.openPath(saveLocation);
+}
+
+function changeSaveLocation() {
+
+    const filepaths = dialog.showOpenDialogSync(mainWindow, {
+        properties: ["openDirectory"]
+    });
+
+    if (filepaths !== undefined) {
+        const newLocation = filepaths[0];
+
+        if (isValidDir(newLocation)) {
+            fs.writeFileSync(defaultSaveLocation + "/saveLocation.txt", newLocation, "utf-8");
+            restart();
+        }
+    }
+}
+
+function revertToDefaultSaveLocation() {
+    fs.writeFileSync(defaultSaveLocation + "/saveLocation.txt", defaultSaveLocation, "utf-8");
+    restart();
+}
+
+function convertOldSave(oldSave: any): Save {
+
+    const newSave = new Save();
+    const notebooks: any[] = oldSave["notebooks"];
+
+    notebooks.forEach(oldNb => {
+        const nb = new NotebookItem("", NotebookItemType.NOTEBOOK);
+        nb.name = oldNb["name"];
+        nb.color = oldNb["color"];
+        nb.icon = oldNb["icon"];
+
+        const pages: any[] = oldNb["pages"];
+        pages.forEach(oldPage => {
+            const page = new NotebookItem("", NotebookItemType.PAGE);
+            page.name = oldPage["title"];
+            page.fileName = oldPage["fileName"];
+            page.favorite = oldPage["favorite"];
+
+            page.parentId = nb.id;
+
+            nb.children.push(page);
+        });
+
+        newSave.notebooks.push(nb);
+    });
+
+    return newSave;
+}
+
+// #endregion
+
+// #region Electron configuration & Window creation 
 
 // This makes sure we get a non-cached verison of the "latestversion.txt" file for the update check
 app.commandLine.appendSwitch("disable-http-cache");
 
-const currentVersion = "2.0.0";
-let mainWindow: BrowserWindow = null;
-const gotTheLock = app.requestSingleInstanceLock();
-let iconPath = "";
-
-//FORCE SINGLE INSTANCE
-if (!gotTheLock) {
+// FORCE SINGLE INSTANCE
+if (!app.requestSingleInstanceLock()) {
     app.quit();
 }
 else {
@@ -25,7 +222,7 @@ else {
         }
     });
 
-    app.on("ready", createWindow);
+    app.on("ready", init);
 
     app.on("window-all-closed", function () {
         // On OS X it is common for applications and their menu bar
@@ -39,7 +236,7 @@ else {
         // On OS X it"s common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
         if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
+            init();
         }
     });
 }
@@ -52,6 +249,7 @@ app.on("web-contents-created", (event, contents) => {
     });
 });
 
+let iconPath = "";
 function createWindow() {
 
     let useFrame = true;
@@ -82,7 +280,7 @@ function createWindow() {
     });
 
     // Enable @electron/remote in preload so we can
-    // use the custom titlebar
+    // use the custom titlebar and set up the menus in the renderer
     remote.enable(mainWindow.webContents);
     remote.initialize();
 
@@ -159,6 +357,10 @@ function checkForUpdates(): void {
     }
 }
 
+// #endregion
+
+// #region Utility functions
+
 function errorPoup(mes: string, det: string) {
     const options: MessageBoxOptions = {
         type: "error",
@@ -185,9 +387,9 @@ function openAboutWindow(): void {
         width: 680,
         height: 380,
         resizable: false,
-		webPreferences: {
-			preload: __dirname + "/about_preload.js",
-		},
+        webPreferences: {
+            preload: __dirname + "/about_preload.js",
+        },
         icon: path.join(__dirname, iconPath),
         title: "About Codex",
         parent: mainWindow,
@@ -201,6 +403,37 @@ function openAboutWindow(): void {
     about.loadFile("html/about.html");
 }
 
+function errorLoadingData(text: string) {
+
+    const options: MessageBoxOptions = {
+        type: "error",
+        buttons: ["Ok"],
+        defaultId: 0,
+        cancelId: 0,
+        detail: text.toString(),
+        title: "Error",
+        message: "Error while loading prefs/save data"
+    };
+    dialog.showMessageBoxSync(mainWindow, options);
+
+    app.exit();
+}
+
+function isValidDir(path: string): boolean {
+    if (fs.existsSync(path) && fs.lstatSync(path).isDirectory()) {
+        return true;
+    }
+    return false;
+}
+
+function restart() {
+    app.relaunch();
+    mainWindow.webContents.send("onClose");
+}
+
+// #endregion
+
+// #region Menus 
 
 const normalMenu = new Menu();
 normalMenu.append(new MenuItem({
@@ -438,9 +671,9 @@ if (process.platform === "linux") {
     }));
 }
 
-/*
-    IPC Events
-*/
+// #endregion
+
+// #region IPC Events 
 
 ipcMain.on("errorPopup", (event, args: string[]) => {
     errorPoup(args[0], args[1]);
@@ -463,27 +696,26 @@ ipcMain.on("setMenuBarVisibility", (event, value: boolean) => {
     mainWindow.setMenuBarVisibility(value);
 });
 
-ipcMain.on("restart", () => {
-    app.relaunch();
-    mainWindow.webContents.send("onClose");
-});
-
 ipcMain.on("exit", () => {
     app.exit();
 });
 
 ipcMain.on("normalMenu", () => {
     Menu.setApplicationMenu(normalMenu);
-	mainWindow.webContents.send("updateMenubar");
+    mainWindow.webContents.send("updateMenubar");
 });
 
 ipcMain.on("editingMenu", () => {
     Menu.setApplicationMenu(editingMenu);
-	mainWindow.webContents.send("updateMenubar");
+    mainWindow.webContents.send("updateMenubar");
 });
 
-ipcMain.on("defaultDataDir", (event) => {
+ipcMain.on("defaultSaveLocation", (event) => {
     event.returnValue = app.getPath("userData");
+});
+
+ipcMain.on("currentSaveLocation", (event) => {
+    event.returnValue = saveLocation;
 });
 
 ipcMain.on("isWindowMaximized", (event) => {
@@ -498,32 +730,38 @@ ipcMain.on("openAboutWindow", () => {
     openAboutWindow();
 });
 
-ipcMain.on("errorLoadingData", (e, text: string) => {
-    mainWindow.destroy();
-    
-    const options: MessageBoxOptions = {
-        type: "error",
-        buttons: ["Ok"],
-        defaultId: 0,
-        cancelId: 0,
-        detail: text.toString(),
-        title: "Error",
-        message: "Error while loading prefs/save data"
-    };
-    dialog.showMessageBoxSync(mainWindow, options);
 
-    app.exit();
+ipcMain.on("getPrefs", (event) => {
+    event.returnValue = prefs;
 });
 
-ipcMain.on("changeSaveLocation", (e) => {
-    const filepaths = dialog.showOpenDialogSync(mainWindow, {
-        properties: ["openDirectory"]
-    });
+ipcMain.on("savePrefs", (event, _prefs: UserPrefs) => {
+    prefs = _prefs;
+    savePrefs();
+});
 
-    if (filepaths !== undefined) {
-        e.returnValue = filepaths[0];
-    }
-    else {
-        e.returnValue = "";
+ipcMain.on("getSave", (event) => {
+    event.returnValue = save;
+});
+
+ipcMain.on("saveSave", (event, _save: Save) => {
+    console.dir(save, {depth: null});
+    console.dir(_save, {depth: null});
+    save = _save as Save;
+    saveSave();
+});
+
+ipcMain.on("loadPageData", (event, page: NotebookItem) => {
+    if (page.type === NotebookItemType.PAGE) {
+        event.returnValue = loadPageData(page.fileName);
     }
 });
+
+ipcMain.on("savePageData", (event, page: NotebookItem, docObject: { [key: string]: any }) => {
+    if (page.type === NotebookItemType.PAGE) {
+        savePageData(page.fileName, docObject);
+    }
+});
+
+
+// #endregion 

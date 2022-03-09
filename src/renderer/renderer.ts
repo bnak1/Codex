@@ -1,13 +1,12 @@
 import { MainAPI } from "../main/preload";
 import * as feather from "feather-icons";
-import validatorEscape from "validator/es/lib/escape";
+import validate from "validator/es/lib/escape";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { prosemirrorSetup, schema } from "./prosemirror";
 import { Save } from "../common/Save";
 import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
 import { UserPrefs } from "../common/UserPrefs";
-import { deserialize } from "typescript-json-serializer";
 
 // #region Expose the variables/functions sent through the preload.ts
 
@@ -21,7 +20,7 @@ export const api: MainAPI = (window as BridgedWindow).mainAPI.api;
 let prefs: UserPrefs = null;
 let save: Save = null;
 
-const defaultSaveLocation = api.defaultSaveLocation();
+const defaultSaveLocation = api.ipcSendSync("defaultSaveLocation");
 const idToObjectMap = new Map<string, NotebookItem>();
 
 // #endregion
@@ -64,9 +63,9 @@ function init(): void {
         }
     });
 
-    prefs = deserialize<UserPrefs>(api.getPrefs(), UserPrefs);
+    prefs = api.ipcSendSync("getPrefs");
 
-    save = deserialize<Save>(api.getSave(), Save);
+    save = api.ipcSendSync("getSave");
     
     applyPrefsAtStart();
 
@@ -216,7 +215,7 @@ function init(): void {
     feather.replace();
 
 
-    if (api.showFirstUseModal) {
+    /*if (api.showFirstUseModal) {
         setTimeout(() => { query("#firstUseModal").modal("show"); }, 500);
 
         if (api.showWhatsNewModal) {
@@ -229,7 +228,7 @@ function init(): void {
         if (api.showWhatsNewModal) {
             query("#whatsNewModal").modal("show");
         }
-    }
+    }*/
 }
 
 init();
@@ -313,9 +312,9 @@ export function applyPrefsAtStart(): void {
     query("#exportBreakPageOnH1Check").prop("checked", prefs.pdfBreakOnH1);
     query("#openPDFonExportCheck").prop("checked", prefs.openPDFonExport);
 
-    document.getElementById("dataDirInput").innerText = api.saveLocation();
+    document.getElementById("dataDirInput").innerText = api.ipcSendSync("currentSaveLocation");
 
-    if (api.saveLocation() == defaultSaveLocation) {
+    if (api.ipcSendSync("currentSaveLocation") == defaultSaveLocation) {
         (document.getElementById("revertToDefaultDataDirBtn") as HTMLButtonElement).disabled = true;
         document.getElementById("revertToDefaultDataDirBtn").style.pointerEvents = "none";
         document.getElementById("revertToDefaultDataDirBtnTooltip").title = "You're already in the default location.";
@@ -413,7 +412,7 @@ export function applyPrefsRuntime(needsRestart = false): void {
     prefs.pdfBreakOnH1 = query("#exportBreakPageOnH1Check").is(":checked");
     prefs.openPDFonExport = query("#openPDFonExportCheck").is(":checked");
 
-    api.savePrefs(prefs);
+    api.ipcSend("savePrefs", prefs);
 
     if (needsRestart) {
         api.ipcSend("restart");
@@ -587,18 +586,18 @@ export function processNotebooks(): void {
 
             el.outerHTML = `
                 <li class="nav-item my-sidebar-item" draggable="false">
-                    <a id="${validatorEscape(item.id)}" href="#list-${validatorEscape(item.id)}" class="nav-link notebook unselectable" data-toggle="collapse" aria-expanded="${item.expanded}" title="${validatorEscape(item.name)}" style="padding-left: calc(1rem + ${marginLeft}px);">
+                    <a id="${validate(item.id)}" href="#list-${validate(item.id)}" class="nav-link notebook unselectable" data-toggle="collapse" aria-expanded="${item.expanded}" title="${validate(item.name)}" style="padding-left: calc(1rem + ${marginLeft}px);">
                         <div class="row">
                             <div class="col-auto pr-0">
-                                <span data-feather="${validatorEscape(item.icon)}" style="color: ${validatorEscape(item.color)}"></span>
+                                <span data-feather="${validate(item.icon)}" style="color: ${validate(item.color)}"></span>
                             </div>
-                            <div class="col pr-1" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${validatorEscape(item.name)}</div>
+                            <div class="col pr-1" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${validate(item.name)}</div>
                             <div class="col-auto" style="padding-right: 20px">
                                 <span class="caret"></span>
                             </div>
                         </div>
                     </a>
-                    <ul id="list-${validatorEscape(item.id)}" class="nav collapse ${item.expanded ? "show" : ""}">
+                    <ul id="list-${validate(item.id)}" class="nav collapse ${item.expanded ? "show" : ""}">
 
                     </ul>
                 </li>
@@ -607,13 +606,13 @@ export function processNotebooks(): void {
             marginLeft += 20;
 
             item.children.forEach(child => {
-                draw(child, document.getElementById(`list-${validatorEscape(item.id)}`));
+                draw(child, document.getElementById(`list-${validate(item.id)}`));
             });
 
             if (item.children.length == 0) {
                 const emptyIndicator = document.createElement("li");
 
-                document.getElementById(`list-${validatorEscape(item.id)}`).appendChild(emptyIndicator);
+                document.getElementById(`list-${validate(item.id)}`).appendChild(emptyIndicator);
                 emptyIndicator.outerHTML = `
                     <li class="nav-item emptyIndicator">
                         <i class="nav-link font-weight-light unselectable" style="padding-left: calc(1rem + ${marginLeft}px);">Nothing here yet...</i>
@@ -631,23 +630,23 @@ export function processNotebooks(): void {
 
             el.outerHTML = `
                 <li class="nav-item my-sidebar-item" draggable="false">
-                    <a id="${validatorEscape(item.id)}" href="#" class="nav-link my-sidebar-link notebook unselectable" title="${validatorEscape(item.name)}" style="padding-left: calc(1rem + ${marginLeft}px);">
+                    <a id="${validate(item.id)}" href="#" class="nav-link my-sidebar-link notebook unselectable" title="${validate(item.name)}" style="padding-left: calc(1rem + ${marginLeft}px);">
                         <div class="row">
                             <div class="col-auto pr-0">
-                                <span data-feather="${validatorEscape(item.icon)}" style="color: ${validatorEscape(item.color)}"></span>
+                                <span data-feather="${validate(item.icon)}" style="color: ${validate(item.color)}"></span>
                             </div>
-                            <div class="col pr-1" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${validatorEscape(item.name)}</div>
+                            <div class="col pr-1" style="padding-left: 5px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${validate(item.name)}</div>
                         </div>
                     </a>
                 </li>
             `;
 
             if (openedPage == item) {
-                document.getElementById(validatorEscape(item.id)).classList.toggle("active", true);
+                document.getElementById(validate(item.id)).classList.toggle("active", true);
             }
         }
 
-        document.getElementById(validatorEscape(item.id)).addEventListener("contextmenu", function (e) {
+        document.getElementById(validate(item.id)).addEventListener("contextmenu", function (e) {
             e.preventDefault();
 
             selectedItem = idToObjectMap.get(this.id);
@@ -678,18 +677,18 @@ export function processNotebooks(): void {
         });
 
         if (item.type === NotebookItemType.PAGE) {
-            document.getElementById(validatorEscape(item.id)).addEventListener("click", () => {
+            document.getElementById(validate(item.id)).addEventListener("click", () => {
                 loadPage(idToObjectMap.get(item.id));
 
                 document.querySelectorAll(".my-sidebar-link").forEach(function (tab) {
                     tab.classList.toggle("active", false);
                 });
     
-                document.getElementById(validatorEscape(item.id)).classList.toggle("active", true);
+                document.getElementById(validate(item.id)).classList.toggle("active", true);
             });
         }
         else {
-            document.getElementById(validatorEscape(item.id)).addEventListener("click", () => {
+            document.getElementById(validate(item.id)).addEventListener("click", () => {
                 const i = idToObjectMap.get(item.id);
                 i.expanded = !i.expanded;
             });
@@ -728,7 +727,7 @@ function loadPage(page: NotebookItem) {
     if (page.type === NotebookItemType.PAGE) {
         openedPage = page;
 
-        let content = api.loadPageData(openedPage.fileName);
+        let content = api.ipcSendSync("loadPageData", page);
 
         if (content === "") {
             content = "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}";
@@ -752,7 +751,7 @@ export function saveOpenedPage(showIndicator = false) {
     if (openedPage != null && openedPage.type === NotebookItemType.PAGE && editorView != null) {
         try {
 
-            api.savePageData(openedPage.fileName, editorView.state.doc.toJSON());
+            api.ipcSend("savePageData", openedPage, editorView.state.doc.toJSON());
 
             const title = shorten(openedPage.name);
 
@@ -840,7 +839,7 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
 
         query("#newItemModal").modal("hide");
 
-        api.saveData(save);
+        api.ipcSend("saveSave", save);
         processNotebooks();
     }
     else {
@@ -877,7 +876,7 @@ document.getElementById("editItemForm").addEventListener("submit", (e) => {
         selectedItem.color = newColor;
         selectedItem.icon = newIcon;
 
-        api.saveData(save);
+        api.ipcSend("saveSave", save);
         processNotebooks();
 
         feather.replace();
@@ -906,7 +905,7 @@ query("#deleteItemButton").on("click", () => {
             const index = save.notebooks.indexOf(selectedItem);
             if (index > -1) {
                 save.notebooks.splice(index, 1);
-                api.saveData(save);
+                api.ipcSend("saveSave", save);
                 processNotebooks();
             }
             else {
@@ -927,7 +926,7 @@ query("#deleteItemButton").on("click", () => {
                 const index = parent.children.indexOf(selectedItem);
                 if (index > -1) {
                     parent.children.splice(index, 1);
-                    api.saveData(save);
+                    api.ipcSend("saveSave", save);
                     processNotebooks();
                 }
                 else {
@@ -1006,7 +1005,7 @@ query("#NBCM-deleteNotebook").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("deleteItemModalTitle").innerHTML = `
-        Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>All sections and pages inside this notebook will be deleted, but the pages' actual data will remain in the notes folder.
+        Are you sure you want to delete <b>${validate(name)}</b>?<br><br>All sections and pages inside this notebook will be deleted, but the pages' actual data will remain in the notes folder.
     `;
 
     query("#deleteItemModal").modal("show");
@@ -1073,7 +1072,7 @@ query("#SCM-deleteSection").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("deleteItemModalTitle").innerHTML = `
-        Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>All sections and pages inside this section will be deleted, but the pages' actual data will remain in the notes folder.
+        Are you sure you want to delete <b>${validate(name)}</b>?<br><br>All sections and pages inside this section will be deleted, but the pages' actual data will remain in the notes folder.
     `;
 
     query("#deleteItemModal").modal("show");
@@ -1114,7 +1113,7 @@ query("#PCM-deletePage").on("click", () => {
     const name = shorten(selectedItem.name);
 
     document.getElementById("deleteItemModalTitle").innerHTML = `
-        Are you sure you want to delete <b>${validatorEscape(name)}</b>?<br><br>The page's actual data will remain in the notes folder.
+        Are you sure you want to delete <b>${validate(name)}</b>?<br><br>The page's actual data will remain in the notes folder.
     `;
 
     query("#deleteItemModal").modal("show");
@@ -1156,9 +1155,9 @@ api.ipcHandle("whatsNew", () => {
 
 api.ipcHandle("onClose", () => {
     prefs.defaultMaximized = api.ipcSendSync("isWindowMaximized");
-    api.savePrefs(prefs);
+    api.ipcSend("savePrefs", prefs);
     saveOpenedPage();
-    api.saveData(save);
+    api.ipcSend("saveSave", save);
     api.ipcSend("exit");
 });
 
