@@ -29,7 +29,7 @@ export class NotebookItem {
     parentId = "";
 
     @JsonProperty({ required: false })
-    fileName: string;
+    document: { [key: string]: any; } = null;
 
     @JsonProperty({ required: false })
     favorite = false;
@@ -52,7 +52,6 @@ export class NotebookItem {
             this.icon = "folder";
         }
         if (this.type === NotebookItemType.PAGE) {
-            this.fileName = this.id + ".json";
             this.icon = "file-text";
         }
     }

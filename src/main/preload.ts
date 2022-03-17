@@ -41,8 +41,6 @@ export type MainAPI = {
     savePrefs(prefsObj: UserPrefs): void,
     getSave(): string,
     saveData(saveObj: Save): void,
-    loadPageData(fileName: string): string,
-    savePageData(fileName: string, docObject: { [key: string]: any } ): void,
     openSaveLocation(): void,
     changeSaveLocation(): void,
     revertToDefaultSaveLocation(): void,
@@ -94,21 +92,6 @@ const api: MainAPI = {
         if (canSaveData == true) {
             save = saveObj;
             fs.writeFileSync(saveLocation + "/save.json", JSON.stringify(save, null, 4), "utf-8");
-        }
-    },
-
-    loadPageData: (fileName: string): string => {
-        if (!fileName.includes("/") && !fileName.includes("\\")) {
-            if (fs.existsSync(saveLocation + "/notes/" + fileName)) {
-                return fs.readFileSync(saveLocation + "/notes/" + fileName, "utf-8").toString();
-            }
-        }
-        return "";
-    },
-
-    savePageData: (fileName: string, docObject: { [key: string]: any }): void => {
-        if (!fileName.includes("/") && !fileName.includes("\\") && canSaveData == true) {
-            fs.writeFileSync(saveLocation + "/notes/" + fileName, JSON.stringify(docObject), "utf-8");
         }
     },
 
@@ -235,10 +218,6 @@ else {
     api.saveData(save);
 }
 
-if (!fs.existsSync(saveLocation + "/notes/")) {
-    fs.mkdirSync(saveLocation + "/notes/");
-}
-
 if (!fs.existsSync(defaultSaveLocation + "/userStyles.css")) {
     fs.writeFileSync(defaultSaveLocation + "/userStyles.css", "/*\n    Enter custom CSS rules for Codex in this file.\n    Use Inspect Element in the DevTools (Ctrl-Shift-I) in Codex to find id's and classes.\n*/");
 }
@@ -258,7 +237,8 @@ function convertOldSave(oldSave: any): Save {
         pages.forEach(oldPage => {
             const page = new NotebookItem("", NotebookItemType.PAGE);
             page.name = oldPage["title"];
-            page.fileName = oldPage["fileName"];
+            // TODO
+            //page.fileName = oldPage["fileName"];
             page.favorite = oldPage["favorite"];
 
             page.parentId = nb.id;

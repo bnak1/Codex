@@ -728,10 +728,10 @@ function loadPage(page: NotebookItem) {
     if (page.type === NotebookItemType.PAGE) {
         openedPage = page;
 
-        let content = api.loadPageData(openedPage.fileName);
+        let content = openedPage.document;
 
-        if (content === "") {
-            content = "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}";
+        if (content == null) {
+            content = JSON.parse("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}");
         }
 
         if (editorView != null) {
@@ -739,7 +739,7 @@ function loadPage(page: NotebookItem) {
         }
         editorView = new EditorView(document.getElementById("editor"), {
             state: EditorState.create({
-                doc: schema.nodeFromJSON(JSON.parse(content)),
+                doc: schema.nodeFromJSON(content),
                 plugins: prosemirrorSetup(prefs.tabSize)
             })
         });
@@ -751,8 +751,7 @@ function loadPage(page: NotebookItem) {
 export function saveOpenedPage(showIndicator = false) {
     if (openedPage != null && openedPage.type === NotebookItemType.PAGE && editorView != null) {
         try {
-
-            api.savePageData(openedPage.fileName, editorView.state.doc.toJSON());
+            openedPage.document = editorView.state.doc.toJSON();
 
             const title = shorten(openedPage.name);
 
