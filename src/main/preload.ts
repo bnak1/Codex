@@ -4,10 +4,8 @@ import * as remote from "@electron/remote";
 import { Titlebar, Color } from "@treverix/custom-electron-titlebar";
 import * as hljs from "highlight.js";
 import { compare } from "semver";
-import { deserialize } from "typescript-json-serializer";
 import { UserPrefs } from "../common/UserPrefs";
-import { Save } from "../common/Save";
-import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
+import { Save, Notebook, Page } from "../common/NotebookItems";
 
 
 const version = "2.0.0";
@@ -37,9 +35,9 @@ export type MainAPI = {
     ipcSendSync(channel: string, ...args: any[]): any,
     defaultSaveLocation(): string,
     saveLocation(): string,
-    getPrefs(): string
+    getPrefs(): UserPrefs
     savePrefs(prefsObj: UserPrefs): void,
-    getSave(): string,
+    getSave(): Save,
     saveData(saveObj: Save): void,
     openSaveLocation(): void,
     changeSaveLocation(): void,
@@ -73,24 +71,24 @@ const api: MainAPI = {
         return saveLocation;
     },
 
-    getPrefs: (): string => {
-        return JSON.stringify(prefs);
+    getPrefs: (): UserPrefs => {
+        return prefs;
     },
 
     savePrefs: (prefsObj: UserPrefs): void => {
         if (canSavePrefs == true) {
-            prefs = prefsObj;
+            prefs = UserPrefs.fromObject(prefsObj);
             fs.writeFileSync(defaultSaveLocation + "/prefs.json", JSON.stringify(prefs, null, 4), "utf-8");
         }
     },
 
-    getSave: (): string => {
-        return JSON.stringify(save);
+    getSave: (): Save => {
+        return save;
     },
 
     saveData: (saveObj: Save): void => {
         if (canSaveData == true) {
-            save = saveObj;
+            save = Save.fromObject(saveObj);
             fs.writeFileSync(saveLocation + "/save.json", JSON.stringify(save, null, 4), "utf-8");
         }
     },
@@ -153,7 +151,7 @@ const api: MainAPI = {
 if (fs.existsSync(defaultSaveLocation + "/prefs.json")) {
     try {
         const json = fs.readFileSync(defaultSaveLocation + "/prefs.json", "utf-8").toString();
-        prefs = deserialize<UserPrefs>(json, UserPrefs);
+        prefs = UserPrefs.fromObject(JSON.parse(json));
 
         canSavePrefs = true;
     }
@@ -194,7 +192,7 @@ if (fs.existsSync(saveLocation + "/save.json")) {
         }
         else {
             try {
-                save = deserialize<Save>(json, Save);
+                save = Save.fromObject(JSON.parse(json));
                 canSaveData = true;
             }
             catch (err) {
@@ -228,19 +226,18 @@ function convertOldSave(oldSave: any): Save {
     const notebooks: any[] = oldSave["notebooks"];
 
     notebooks.forEach(oldNb => {
-        const nb = new NotebookItem("", NotebookItemType.NOTEBOOK);
+        const nb = new Notebook("");
+
         nb.name = oldNb["name"];
         nb.color = oldNb["color"];
         nb.icon = oldNb["icon"];
 
         const pages: any[] = oldNb["pages"];
         pages.forEach(oldPage => {
-            const page = new NotebookItem("", NotebookItemType.PAGE);
-            page.name = oldPage["title"];
-            // TODO
-            //page.fileName = oldPage["fileName"];
-            page.favorite = oldPage["favorite"];
+            const page = new Page("");
 
+            page.name = oldPage["title"];
+            page.favorite = oldPage["favorite"];
             page.parentId = nb.id;
 
             nb.children.push(page);

@@ -4,10 +4,8 @@ import validatorEscape from "validator/es/lib/escape";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { prosemirrorSetup, schema } from "./prosemirror";
-import { Save } from "../common/Save";
-import { NotebookItem, NotebookItemType } from "../common/NotebookItem";
+import { Save, NotebookItem, Notebook, Section, Page } from "../common/NotebookItems";
 import { UserPrefs } from "../common/UserPrefs";
-import { deserialize } from "typescript-json-serializer";
 
 // #region Expose the variables/functions sent through the preload.ts
 
@@ -17,17 +15,22 @@ type BridgedWindow = Window & typeof globalThis & {
 
 export const api: MainAPI = (window as BridgedWindow).mainAPI.api;
 
+// #endregion
+
+
+// #region GLOBAL VARIABLES
+
+enum NotebookItemType {
+    NOTEBOOK,
+    SECTION,
+    PAGE
+}
 
 let prefs: UserPrefs = null;
 let save: Save = null;
 
 const defaultSaveLocation = api.defaultSaveLocation();
 const idToObjectMap = new Map<string, NotebookItem>();
-
-// #endregion
-
-
-// #region GLOBAL VARIABLES
 
 let darkStyleLink: HTMLLinkElement;
 
@@ -37,7 +40,7 @@ let fadeInSaveIndicator: NodeJS.Timeout;
 
 let selectedItem: NotebookItem;
 let createNewItemMode: NotebookItemType;
-let openedPage: NotebookItem;
+let openedPage: Page;
 
 let zoomLevel = 1.000;
 
@@ -64,9 +67,11 @@ function init(): void {
         }
     });
 
-    prefs = deserialize<UserPrefs>(api.getPrefs(), UserPrefs);
+    prefs = UserPrefs.fromObject(api.getPrefs());
 
-    save = deserialize<Save>(api.getSave(), Save);
+    save = Save.fromObject(api.getSave());
+
+    console.dir(save, {depth: null});
     
     applyPrefsAtStart();
 
@@ -579,7 +584,7 @@ export function processNotebooks(): void {
 
         idToObjectMap.set(item.id, item);
 
-        if (item.type === NotebookItemType.NOTEBOOK || item.type === NotebookItemType.SECTION) {
+        if (item instanceof Notebook || item instanceof Section) {
 
             const el = document.createElement("li");
 
@@ -623,7 +628,7 @@ export function processNotebooks(): void {
 
             marginLeft -= 20;
         }
-        else if (item.type === NotebookItemType.PAGE) {
+        else if (item instanceof Page) {
 
             const el = document.createElement("li");
 
@@ -658,11 +663,11 @@ export function processNotebooks(): void {
 
             let cm = null;
 
-            if (selectedItem.type === NotebookItemType.NOTEBOOK)
+            if (selectedItem instanceof Notebook)
                 cm = document.getElementById("notebook-context-menu");
-            else if (selectedItem.type === NotebookItemType.SECTION)
+            else if (selectedItem instanceof Section)
                 cm = document.getElementById("section-context-menu");
-            else if (selectedItem.type === NotebookItemType.PAGE)
+            else if (selectedItem instanceof Page)
                 cm = document.getElementById("page-context-menu");
 
             cm.style.display = "block";
@@ -677,7 +682,7 @@ export function processNotebooks(): void {
             }
         });
 
-        if (item.type === NotebookItemType.PAGE) {
+        if (item instanceof Page) {
             document.getElementById(validatorEscape(item.id)).addEventListener("click", () => {
                 loadPage(idToObjectMap.get(item.id));
 
@@ -691,6 +696,7 @@ export function processNotebooks(): void {
         else {
             document.getElementById(validatorEscape(item.id)).addEventListener("click", () => {
                 const i = idToObjectMap.get(item.id);
+                if (i instanceof Section || i instanceof Notebook)
                 i.expanded = !i.expanded;
             });
         }
@@ -725,21 +731,15 @@ function loadPage(page: NotebookItem) {
     showUIPage("editorPage");
     saveOpenedPage();
 
-    if (page.type === NotebookItemType.PAGE) {
+    if (page instanceof Page) {
         openedPage = page;
-
-        let content = openedPage.document;
-
-        if (content == null) {
-            content = JSON.parse("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}");
-        }
 
         if (editorView != null) {
             editorView.destroy();
         }
         editorView = new EditorView(document.getElementById("editor"), {
             state: EditorState.create({
-                doc: schema.nodeFromJSON(content),
+                doc: schema.nodeFromJSON(openedPage.doc),
                 plugins: prosemirrorSetup(prefs.tabSize)
             })
         });
@@ -749,9 +749,9 @@ function loadPage(page: NotebookItem) {
 }
 
 export function saveOpenedPage(showIndicator = false) {
-    if (openedPage != null && openedPage.type === NotebookItemType.PAGE && editorView != null) {
+    if (openedPage != null && openedPage instanceof Page && editorView != null) {
         try {
-            openedPage.document = editorView.state.doc.toJSON();
+            openedPage.doc = editorView.state.doc.toJSON();
 
             const title = shorten(openedPage.name);
 
@@ -805,32 +805,32 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
     if (name !== "") {
 
         if (createNewItemMode === NotebookItemType.NOTEBOOK) {
-            const nb = new NotebookItem(name, NotebookItemType.NOTEBOOK);
+            const nb = new Notebook(name);
             nb.color = color;
             nb.icon = icon;
             save.notebooks.push(nb);
         }
         else if (createNewItemMode === NotebookItemType.SECTION) {
-            const section = new NotebookItem(name, NotebookItemType.SECTION);
+            const section = new Section(name);
             section.color = color;
             section.icon = icon;
 
             if (selectedItem !== null) {
                 const parent = selectedItem;
-                if (parent.type !== NotebookItemType.PAGE) {
+                if (parent instanceof Section || parent instanceof Notebook) {
                     parent.children.push(section);
                     section.parentId = parent.id;
                 }
             }
         }
         else if (createNewItemMode === NotebookItemType.PAGE) {
-            const page = new NotebookItem(name, NotebookItemType.PAGE);
+            const page = new Page(name);
             page.color = color;
             page.icon = icon;
 
             if (selectedItem !== null) {
                 const parent = selectedItem;
-                if (parent.type !== NotebookItemType.PAGE) {
+                if (parent instanceof Section || parent instanceof Notebook) {
                     parent.children.push(page);
                     page.parentId = parent.id;
                 }
@@ -900,7 +900,7 @@ query("#deleteItemButton").on("click", () => {
     saveOpenedPage();
     showUIPage("homePage");
 
-    if (selectedItem.type === NotebookItemType.NOTEBOOK) {
+    if (selectedItem instanceof Notebook) {
         try {
             const index = save.notebooks.indexOf(selectedItem);
             if (index > -1) {
@@ -918,8 +918,8 @@ query("#deleteItemButton").on("click", () => {
             console.error(err);
         }
     }
-    else {
-        const parent = idToObjectMap.get(selectedItem.parentId);
+    else if (selectedItem instanceof Section || selectedItem instanceof Page) {
+        const parent = idToObjectMap.get(selectedItem.parentId) as (Section | Notebook);
 
         if (parent != null) {
             try {
@@ -1096,7 +1096,7 @@ query("#PCM-editPage").on("click", () => {
 });
 
 query("#PCM-favoritePage").on("click", () => {
-    if (selectedItem.type === NotebookItemType.PAGE) {
+    if (selectedItem instanceof Page) {
         selectedItem.favorite = !selectedItem.favorite;
     }
 });
