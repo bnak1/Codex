@@ -44,13 +44,17 @@ export class Notebook extends NotebookItem {
 
     constructor(name: string) {
         super(name);
-        this.icon = "notebook";
+        this.icon = "book";
     }
 
     static fromObject(obj: any): Notebook {
         const inst = new Notebook("");
 
-        Object.assign(inst, obj);
+        inst.id = obj["id"];
+        inst.name = obj["name"];
+        inst.icon = obj["icon"] || "book";
+        inst.color = obj["color"] || "#000000";
+        inst.expanded = obj["expanded"] || false;
 
         inst.children = [];
         obj["children"].forEach((child: any) => {
@@ -88,7 +92,12 @@ export class Section extends NotebookItem {
     static fromObject(obj: any): Section {
         const inst = new Section("");
 
-        Object.assign(inst, obj);
+        inst.id = obj["id"];
+        inst.name = obj["name"];
+        inst.icon = obj["icon"] || "folder";
+        inst.color = obj["color"] || "#000000";
+        inst.expanded = obj["expanded"] || false;
+        inst.parentId = obj["parentId"];
 
         inst.children = [];
         obj["children"].forEach((child: any) => {
@@ -126,7 +135,13 @@ export class Page extends NotebookItem {
     static fromObject(obj: any): Page {
         const inst = new Page("");
 
-        Object.assign(inst, obj);
+        inst.id = obj["id"];
+        inst.name = obj["name"];
+        inst.icon = obj["icon"] || "file-text";
+        inst.color = obj["color"] || "#000000";
+        inst.parentId = obj["parentId"];
+        inst.favorite = obj["favorite"] || false;
+        inst.doc = obj["doc"] || {"type":"doc","content":[{"type":"paragraph"}]};
 
         return inst;
     }
@@ -136,9 +151,12 @@ export class Save {
 
     version = "2.0.0";
     notebooks: Notebook[] = [];
+    textContents: ({id: string, name: string, text: string})[];
 
     static fromObject(obj: any): Save {
         const inst = new Save();
+
+        inst.version = obj["version"] || "2.0.0";
 
         obj["notebooks"].forEach((child: any) => {
 

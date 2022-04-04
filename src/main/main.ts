@@ -1,20 +1,38 @@
 import { app, BrowserWindow, dialog, net, MessageBoxOptions, ipcMain, nativeTheme, Menu, MenuItem, shell } from "electron";
 import * as path from "path";
+import * as fs from "fs";
 import validator from "validator";
 import * as semver from "semver";
 import * as remote from "@electron/remote/main";
 import * as contextMenu from "electron-context-menu";
+import * as logger from "electron-log";
+import { UserPrefs } from "../common/UserPrefs";
+import { Save, NotebookItem, Notebook, Section, Page } from "../common/NotebookItems";
+import { serialize, deserialize } from "bson";
+
+// #region Global variables 
+
+const currentVersion = "2.0.0";
+let mainWindow: BrowserWindow = null;
+let iconPath = "";
+
+const persistentDataPath = app.getPath("userData");
+const prefsPath = persistentDataPath + "\\prefs.json";
+
+let prefs: UserPrefs = null;
+let save: Save = null;
+const idMap = new Map<string, NotebookItem>();
+
+// #endregion
+
+
+// #region Electron configuration 
 
 // This makes sure we get a non-cached verison of the "latestversion.txt" file for the update check
 app.commandLine.appendSwitch("disable-http-cache");
 
-const currentVersion = "2.0.0";
-let mainWindow: BrowserWindow = null;
-const gotTheLock = app.requestSingleInstanceLock();
-let iconPath = "";
-
-//FORCE SINGLE INSTANCE
-if (!gotTheLock) {
+if (!app.requestSingleInstanceLock()) {
+    // FORCE SINGLE INSTANCE
     app.quit();
 }
 else {
@@ -25,7 +43,7 @@ else {
         }
     });
 
-    app.on("ready", createWindow);
+    app.on("ready", start);
 
     app.on("window-all-closed", function () {
         // On OS X it is common for applications and their menu bar
@@ -39,21 +57,94 @@ else {
         // On OS X it"s common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
         if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
+            start();
         }
+    });
+
+    app.on("quit", () => {
+        logger.log("Exiting application\n\n");
     });
 }
 
-// Disable navigation
-// https://www.electronjs.org/docs/latest/tutorial/security#13-disable-or-limit-navigation
-app.on("web-contents-created", (event, contents) => {
-    contents.on("will-navigate", (event) => {
-        event.preventDefault();
-    });
-});
+// #endregion
 
-function createWindow() {
 
+function start() {
+
+    /*
+        TODO
+        just load the save like normal, assume its current
+        they can go to the menu and select "load old save" and 1 function will convert everything
+    */
+
+    logger.info("Starting application");
+
+    // Load prefs
+    if (fs.existsSync(prefsPath)) {
+        try {
+            const obj = JSON.parse(fs.readFileSync(prefsPath, "utf-8"));
+            prefs = UserPrefs.fromObject(obj);
+
+            // Check for old "dataDir" setting from pre-2.0
+            if (obj["dataDir"] != undefined) {
+
+                // TODO show a popup that they need to go into the menu and choose "Load old save from pre-2.0"
+                prefs.saveFilePath = persistentDataPath + "\\save.bson";
+
+                logger.info(`Converted old dataDir setting to saveFilePath (${prefs.saveFilePath})`);
+
+                writePrefsToDisk();
+            }
+            logger.info("Loaded prefs.json successfully");
+        }
+        catch (error) {
+            die("prefs.json could not be parsed.", `File located at: ${prefsPath} - Error message: '${error}'`);
+        }
+    }
+    else {
+        prefs = new UserPrefs();
+        prefs.saveFilePath = persistentDataPath + "\\save.bson";
+
+        writePrefsToDisk();
+
+        logger.info(`Preferences file (${prefsPath}) was not found, created a new one (with the default save dir: ${prefs.saveFilePath})`);
+    }
+
+
+    // Load save file
+
+    if (fs.existsSync(prefs.saveFilePath)) {
+        try {
+            const obj = JSON.parse(fs.readFileSync(prefs.saveFilePath, "utf-8"));
+    
+            save = Save.fromObject(obj);
+            logger.info("Loaded save file successfully");
+    
+            // Load all NotebookItems into the id-to-object map
+            processSaveIntoMap();
+        }
+        catch (error) {
+            die("Save file could not be parsed.", `File located at: ${prefs.saveFilePath} - Error message: '${error}'`);
+        }
+
+    }
+    else {
+        save = new Save();
+
+        writeSaveToDisk();
+
+        logger.info(`Save file at ${prefs.saveFilePath} was not found, creating a new one`);
+    }
+
+    // Create userStyles.css if it's not there
+    if (!fs.existsSync(persistentDataPath + "\\userStyles.css")) {
+        fs.writeFileSync(persistentDataPath + "\\userStyles.css", 
+            "/*\n    Enter custom CSS rules for Codex in this file.\n    Use Inspect Element in the DevTools (Ctrl-Shift-I) in Codex to find id's and classes.\n*/", 
+            "utf-8");
+    }
+
+
+    // Create window
     let useFrame = true;
 
     if (process.platform === "win32") {
@@ -93,12 +184,12 @@ function createWindow() {
         showLookUpSelection: false
     });
 
-    Menu.setApplicationMenu(normalMenu);
+    //Menu.setApplicationMenu(normalMenu);
 
     mainWindow.webContents.once("dom-ready", () => {
 
         mainWindow.show();
-        checkForUpdates();
+        //checkForUpdates();
 
     });
 
@@ -109,421 +200,194 @@ function createWindow() {
 
     // Open the DevTools.
     //mainWindow.webContents.openDevTools();
-
 }
 
-function checkForUpdates(): void {
+
+// #region Utility functions 
+
+
+function writeSaveToDisk() {
+
     try {
-        const request = net.request("https://jcv8000.github.io/codex/latestversion.txt");
-        request.on("response", (response) => {
-            response.on("data", (chunk) => {
+        fs.writeFileSync(prefs.saveFilePath, JSON.stringify(save, null, 4), "utf-8");
 
-                const onlineVersion = validator.escape(chunk.toString());
-
-                if (semver.valid(onlineVersion)) {
-
-                    mainWindow.webContents.send("console.log", `Checking for updates\nCurrent version: ${currentVersion}\nLatest version: ${onlineVersion}`);
-
-                    // Check if online version # is greater than current version
-                    if (semver.compare(currentVersion, onlineVersion) == -1) {
-                        mainWindow.webContents.send("updateAvailable", onlineVersion);
-                    }
-
-                }
-                else {
-                    errorPoup("Failed to check for updates", "Response body was not a valid version number.");
-                }
-
-            });
-            response.on("aborted", () => {
-                errorPoup("Net request aborted while trying to check for updates", "");
-            });
-            response.on("error", (error: Error) => {
-                errorPoup("Failed to check for updates", error.toString());
-            });
-        });
-
-        request.on("redirect", () => {
-            request.abort();
-        });
-
-        request.end();
-
-        request.on("error", (err) => {
-            errorPoup("Failed to check for updates", err.toString());
-        });
-
+        logger.info(`Save file written to disk (${prefs.saveFilePath})`);
     }
-    catch (err) {
-        errorPoup("Failed to check for updates", err.toString());
+    catch (error) {
+        // TODO error popup
+        logger.error(`Error writing save to disk (${prefs.saveFilePath}): ${error}`);
     }
 }
 
-function errorPoup(mes: string, det: string) {
-    const options: MessageBoxOptions = {
-        type: "error",
-        buttons: ["Ok"],
-        defaultId: 0,
-        cancelId: 0,
-        detail: det,
-        title: "Error",
-        message: mes
-    };
-    dialog.showMessageBox(mainWindow, options);
+function writePrefsToDisk() {
+    try {
+        fs.writeFileSync(prefsPath, JSON.stringify(prefs, null, 4), "utf-8");
 
-    mainWindow.webContents.send("console.error", `${mes}\n${det}`);
+        logger.info(`Preferences file written to disk (${prefsPath})`);
+    }
+    catch (error) {
+        // TODO error popup
+        logger.error(`Error writing prefs to disk (${prefsPath}): ${error}`);
+    }
 }
 
-function executeJavascriptInRenderer(js: string): void {
-    mainWindow.webContents.executeJavaScript(js + ";0").catch((reason) => {
-        errorPoup("Error executing javascript in renderer process", reason.toString());
+function processSaveIntoMap() {
+
+    function recurseAdd(item: NotebookItem) {
+        idMap.set(item.id, item);
+
+        if (item instanceof Notebook || item instanceof Section) {
+            item.children.forEach(child => {
+                recurseAdd(child);
+            });
+        }
+    }
+
+    idMap.clear();
+
+    save.notebooks.forEach(nb => {
+        recurseAdd(nb);
     });
+
 }
 
-function openAboutWindow(): void {
-    const about = new BrowserWindow({
-        width: 680,
-        height: 380,
-        resizable: false,
-		webPreferences: {
-			preload: __dirname + "/about_preload.js",
-		},
-        icon: path.join(__dirname, iconPath),
-        title: "About Codex",
-        parent: mainWindow,
-        modal: (process.platform === "darwin" ? false : true),
-        show: false
-    });
-    about.webContents.once("dom-ready", () => {
-        about.show();
-    });
-    about.setMenu(null);
-    about.loadFile("html/about.html");
-}
+function die(message: string, detail: string) {
 
+    logger.error(`Error while loading prefs/save data - ${message} - ${detail}`);
 
-const normalMenu = new Menu();
-normalMenu.append(new MenuItem({
-    label: "File",
-    submenu: [
-        {
-            label: "New Notebook",
-            accelerator: "CmdOrCtrl+N",
-            click: () => mainWindow.webContents.send("newNotebook")
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Exit",
-            click: () => app.exit()
-        }
-    ]
-}));
-
-normalMenu.append(new MenuItem({
-    label: "View",
-    submenu: [
-        {
-            label: "Toggle Sidebar",
-            accelerator: "CmdOrCtrl+D",
-            click: () => executeJavascriptInRenderer("renderer.toggleSidebar(null)")
-        },
-        {
-            label: "Reset Sidebar Width",
-            click: () => executeJavascriptInRenderer("renderer.resizeSidebar(275)")
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Toggle Developer Tools",
-            accelerator: "CmdOrCtrl+Shift+I",
-            click: () => mainWindow.webContents.toggleDevTools()
-        }
-    ]
-}));
-
-normalMenu.append(new MenuItem({
-    label: "Help",
-    submenu: [
-        {
-            label: "Help",
-            accelerator: "F1",
-            click: () => shell.openExternal("https://www.codexnotes.com/docs/")
-        },
-        {
-            label: "Website",
-            click: () => shell.openExternal("https://www.codexnotes.com/")
-        },
-        {
-            label: "What's New",
-            click: () => mainWindow.webContents.send("whatsNew")
-        },
-        {
-            label: "All Changelogs",
-            click: () => shell.openExternal("https://www.codexnotes.com/updates/")
-        },
-        {
-            label: "Give Feedback (Google Forms)",
-            click: () => shell.openExternal("https://forms.gle/uDLJpqLbNLcEx1F8A")
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "About",
-            click: () => openAboutWindow()
-        }
-    ]
-}));
-
-
-const editingMenu = new Menu();
-editingMenu.append(new MenuItem({
-    label: "File",
-    submenu: [
-        {
-            label: "New Notebook",
-            accelerator: "CmdOrCtrl+N",
-            click: () => executeJavascriptInRenderer("$('#newNotebookModal').modal('show')")
-        },
-        {
-            label: "Save Page",
-            accelerator: "CmdOrCtrl+S",
-            click: () => executeJavascriptInRenderer("renderer.saveOpenedPage(true)")
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Export page to PDF...",
-            accelerator: "CmdOrCtrl+P",
-            click: () => executeJavascriptInRenderer("renderer.printCurrentPage()")
-        },
-        {
-            label: "Export page to Markdown...",
-            click: () => executeJavascriptInRenderer("renderer.exportCurrentPageToMarkdown()")
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Exit",
-            click: () => app.exit()
-        }
-    ]
-}));
-
-editingMenu.append(new MenuItem({
-    label: "Edit",
-    submenu: [
-        {
-            label: "Cut",
-            accelerator: "CmdOrCtrl+X",
-            ////click: () => document.execCommand("cut")
-        },
-        {
-            label: "Copy",
-            accelerator: "CmdOrCtrl+C",
-            ////click: () => document.execCommand("copy")
-        },
-        {
-            label: "Paste",
-            accelerator: "CmdOrCtrl+V",
-            ////click: () => document.execCommand("paste")
-        }
-    ]
-}));
-
-editingMenu.append(new MenuItem({
-    label: "View",
-    submenu: [
-        {
-            label: "Zoom In",
-            accelerator: "CmdOrCtrl+=",
-            click: () => executeJavascriptInRenderer("renderer.zoomIn()")
-        },
-        {
-            label: "Zoom Out",
-            accelerator: "CmdOrCtrl+-",
-            click: () => executeJavascriptInRenderer("renderer.zoomOut()")
-        },
-        {
-            label: "Restore Default Zoom",
-            accelerator: "CmdOrCtrl+R",
-            click: () => executeJavascriptInRenderer("renderer.defaultZoom()")
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Toggle Sidebar",
-            accelerator: "CmdOrCtrl+D",
-            click: () => executeJavascriptInRenderer("renderer.toggleSidebar(null)")
-        },
-        {
-            label: "Reset Sidebar Width",
-            click: () => executeJavascriptInRenderer("renderer.resizeSidebar(275)")
-        },
-        {
-            label: "Toggle Editor Toolbar",
-            accelerator: "CmdOrCtrl+T",
-            click: () => executeJavascriptInRenderer("renderer.toggleEditorRibbon()")
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Toggle Developer Tools",
-            accelerator: "CmdOrCtrl+Shift+I",
-            click: () => mainWindow.webContents.toggleDevTools()
-        }
-    ]
-}));
-
-editingMenu.append(new MenuItem({
-    label: "Help",
-    submenu: [
-        {
-            label: "Help",
-            accelerator: "F1",
-            click: () => shell.openExternal("https://www.codexnotes.com/docs/")
-        },
-        {
-            label: "Website",
-            click: () => shell.openExternal("https://www.codexnotes.com/")
-        },
-        {
-            label: "What's New",
-            click: () => mainWindow.webContents.send("whatsNew")
-        },
-        {
-            label: "All Changelogs",
-            click: () => shell.openExternal("https://www.codexnotes.com/updates/")
-        },
-        {
-            label: "Give Feedback (Google Forms)",
-            click: () => shell.openExternal("https://forms.gle/uDLJpqLbNLcEx1F8A")
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "About",
-            click: () => openAboutWindow()
-        }
-    ]
-}));
-
-// Add the "Toggle Menu Bar" option for linux users
-if (process.platform === "linux") {
-    normalMenu.items[1].submenu.append(new MenuItem({
-        label: "Toggle Menu Bar",
-        click: () => {
-            const current = mainWindow.isMenuBarVisible();
-            mainWindow.setMenuBarVisibility(!current);
-            mainWindow.webContents.send("prefsShowMenuBar", !current);
-        },
-        accelerator: "Ctrl+M"
-    }));
-    editingMenu.items[2].submenu.append(new MenuItem({
-        label: "Toggle Menu Bar",
-        click: () => {
-            const current = mainWindow.isMenuBarVisible();
-            mainWindow.setMenuBarVisibility(!current);
-            mainWindow.webContents.send("prefsShowMenuBar", !current);
-        },
-        accelerator: "Ctrl+M"
-    }));
-}
-
-/*
-    IPC Events
-*/
-
-ipcMain.on("errorPopup", (event, args: string[]) => {
-    errorPoup(args[0], args[1]);
-});
-
-ipcMain.on("setNativeThemeSource", (event, value: string) => {
-    if (value == "system")
-        nativeTheme.themeSource = "system";
-    else if (value == "light")
-        nativeTheme.themeSource = "light";
-    else if (value == "dark")
-        nativeTheme.themeSource = "dark";
-});
-
-ipcMain.on("maximize", () => {
-    mainWindow.maximize();
-});
-
-ipcMain.on("setMenuBarVisibility", (event, value: boolean) => {
-    mainWindow.setMenuBarVisibility(value);
-});
-
-ipcMain.on("restart", () => {
-    app.relaunch();
-    mainWindow.webContents.send("onClose");
-});
-
-ipcMain.on("exit", () => {
-    app.exit();
-});
-
-ipcMain.on("normalMenu", () => {
-    Menu.setApplicationMenu(normalMenu);
-	mainWindow.webContents.send("updateMenubar");
-});
-
-ipcMain.on("editingMenu", () => {
-    Menu.setApplicationMenu(editingMenu);
-	mainWindow.webContents.send("updateMenubar");
-});
-
-ipcMain.on("defaultDataDir", (event) => {
-    event.returnValue = app.getPath("userData");
-});
-
-ipcMain.on("isWindowMaximized", (event) => {
-    event.returnValue = mainWindow.isMaximized();
-});
-
-ipcMain.on("nativeThemeShouldUseDarkColors", (event) => {
-    event.returnValue = nativeTheme.shouldUseDarkColors;
-});
-
-ipcMain.on("openAboutWindow", () => {
-    openAboutWindow();
-});
-
-ipcMain.on("errorLoadingData", (e, text: string) => {
-    mainWindow.destroy();
+    if (mainWindow != null)
+        mainWindow.destroy();
     
     const options: MessageBoxOptions = {
         type: "error",
         buttons: ["Ok"],
         defaultId: 0,
         cancelId: 0,
-        detail: text.toString(),
-        title: "Error",
-        message: "Error while loading prefs/save data"
+        title: "Error while loading prefs/save data",
+        message: message,
+        detail: detail,
     };
     dialog.showMessageBoxSync(mainWindow, options);
 
-    app.exit();
+    logger.log("Exiting application\n\n");
+    app.exit(1);
+}
+
+// #endregion
+
+
+// #region API functions for altering/reading the save
+
+ipcMain.on("nbi:getFullSave", (event) => {
+    event.returnValue = save;
 });
 
-ipcMain.on("changeSaveLocation", (e) => {
-    const filepaths = dialog.showOpenDialogSync(mainWindow, {
-        properties: ["openDirectory"]
-    });
+ipcMain.on("nbi:get", (event, id: string) => {
+    event.returnValue = idMap.get(id);
+});
 
-    if (filepaths !== undefined) {
-        e.returnValue = filepaths[0];
+ipcMain.on("nbi:create", (event, data: {
+    parentId: string,
+    obj: NotebookItem
+}) => {
+    
+
+    try {
+        if (data.obj instanceof Notebook) {
+            const nb = Notebook.fromObject(data.obj);
+    
+            save.notebooks.push(nb);
+            idMap.set(nb.id, nb);
+
+            event.returnValue = 0;
+        }
+        else if (data.obj instanceof Section) {
+            
+            if (idMap.has(data.parentId)) {
+                const section = Section.fromObject(data.obj);
+    
+                const parent = idMap.get(data.parentId);
+                if (parent instanceof Notebook || parent instanceof Section) {
+                    parent.children.push(section);
+                    idMap.set(section.id, section);
+
+                    event.returnValue = 0;
+                }
+            }
+            else {
+                event.returnValue = 1;
+            }
+    
+        }
+        else if (data.obj instanceof Page) {
+    
+            if (idMap.has(data.parentId)) {
+                const page = Page.fromObject(data.obj);
+    
+                const parent = idMap.get(data.parentId);
+                if (parent instanceof Notebook || parent instanceof Section) {
+                    parent.children.push(page);
+                    idMap.set(page.id, page);
+
+                    event.returnValue = 0;
+                }
+            }
+            else {
+                event.returnValue = 1;
+            }
+    
+        }
     }
-    else {
-        e.returnValue = "";
+    catch (error) {
+        event.returnValue = 1;
+        logger.error(`Error while trying to create a NotebookItem with name '${data.obj.name}': ${error}`);
     }
 });
+
+ipcMain.on("nbi:update", (event, data: {
+    obj: NotebookItem
+}) => {
+
+    if (idMap.has(data.obj.id)) {
+        const item = idMap.get(data.obj.id);
+
+        Object.assign(item, data.obj);
+
+        event.returnValue = 0;
+    }
+    else
+        event.returnValue = 1;
+
+});
+
+ipcMain.on("nbi:delete", (event, data: {
+    id: string
+}) => {
+
+    if (idMap.has(data.id)) {
+
+        try {
+            const item = idMap.get(data.id);
+
+            if (item instanceof Notebook) {
+                save.notebooks.splice(save.notebooks.indexOf(item), 1);
+                idMap.delete(item.id);
+            }
+            else if (item instanceof Section || item instanceof Page) {
+                const parent = idMap.get(item.parentId) as (Notebook | Section);
+
+                parent.children.splice(parent.children.indexOf(item), 1);
+                idMap.delete(item.id);
+            }
+        }
+        catch (error) {
+            event.returnValue = 1;
+            logger.error(`Error while trying to delete a NotebookItem with ID '${data.id}': ${error}`);
+        }
+    }
+    else
+        event.returnValue = 1;
+
+});
+
+// #endregion

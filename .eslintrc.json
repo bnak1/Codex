@@ -13,14 +13,19 @@
     },
     "rules": {
         "semi": "warn",
-        "quotes": ["warn", "double"],
+        "quotes": [
+            "warn",
+            "double"
+        ],
         "prefer-const": "warn",
         "no-unused-vars": "off",
         "no-cond-assign": "off"
     },
     "overrides": [
         {
-            "files": ["**/*.ts"],
+            "files": [
+                "**/*.ts"
+            ],
             "extends": [
                 "eslint:recommended",
                 "plugin:@typescript-eslint/eslint-recommended",
@@ -28,7 +33,9 @@
                 "plugin:import/typescript"
             ],
             "parser": "@typescript-eslint/parser",
-            "plugins": ["@typescript-eslint"],
+            "plugins": [
+                "@typescript-eslint"
+            ],
             "rules": {
                 "@typescript-eslint/no-explicit-any": "off",
                 "@typescript-eslint/ban-ts-comment": "off"
