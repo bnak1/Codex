@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
 
-export abstract class NotebookItem {
+/*export abstract class NotebookItem {
 
     id = "";
     name = "";
@@ -145,26 +145,74 @@ export class Page extends NotebookItem {
 
         return inst;
     }
+}*/
+
+export enum NBIType {
+    NOTEBOOK,
+    SECTION,
+    PAGE
+}
+
+export class NotebookItem {
+
+    id = "";
+    parentId = "";
+    type: NBIType;
+    name = "";
+    icon = "";
+    color = "#000000";
+    children: NotebookItem[] = null;
+    expanded = false;
+    favorite = false;
+    doc: { [key: string]: any; } = null;
+
+    constructor(type: NBIType) {
+
+        this.id = uuid();
+        this.type = type;
+
+        if (type === NBIType.NOTEBOOK) {
+            this.icon = "book";
+            this.children = [];
+        }
+        else if (type === NBIType.SECTION) {
+            this.icon = "folder";
+            this.children = [];
+        }
+        else if (type === NBIType.PAGE) {
+            this.icon = "file-plus";
+            this.doc = {"type":"doc","content":[{"type":"paragraph"}]};
+        }
+    }
+
+    getAllPages(): NotebookItem[] {
+
+        const list: NotebookItem[] = [];
+
+        function recurseAdd(item: NotebookItem) {
+            if (item.type === NBIType.NOTEBOOK || item.type === NBIType.SECTION) {
+                item.children.forEach(child => {
+                    recurseAdd(child);
+                });
+            }
+            else if (item.type === NBIType.PAGE) {
+                list.push(item);
+            }
+        }
+
+        this.children.forEach(child => {
+            recurseAdd(child);
+        });
+
+        return list;
+    }
+
 }
 
 export class Save {
 
     version = "2.0.0";
-    notebooks: Notebook[] = [];
+    notebooks: NotebookItem[] = [];
     textContents: ({id: string, name: string, text: string})[];
-
-    static fromObject(obj: any): Save {
-        const inst = new Save();
-
-        inst.version = obj["version"] || "2.0.0";
-
-        obj["notebooks"].forEach((child: any) => {
-
-            const notebook = Notebook.fromObject(child);
-            inst.notebooks.push(notebook);
-
-        });
-
-        return inst;
-    }
+    
 }

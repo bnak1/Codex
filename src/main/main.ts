@@ -7,7 +7,7 @@ import * as remote from "@electron/remote/main";
 import * as contextMenu from "electron-context-menu";
 import * as logger from "electron-log";
 import { UserPrefs } from "../common/UserPrefs";
-import { Save, NotebookItem, Notebook, Section, Page } from "../common/NotebookItems";
+import { Save, NotebookItem, NBIType } from "../common/NotebookItems";
 import { serialize, deserialize } from "bson";
 
 // #region Global variables 
@@ -86,7 +86,7 @@ function start() {
             prefs = UserPrefs.fromObject(obj);
 
             // Check for old "dataDir" setting from pre-2.0
-            if (obj["dataDir"] != undefined) {
+            if (obj["saveFilePath"] == undefined) {
 
                 // TODO show a popup that they need to go into the menu and choose "Load old save from pre-2.0"
                 prefs.saveFilePath = persistentDataPath + "\\save.bson";
@@ -115,9 +115,8 @@ function start() {
 
     if (fs.existsSync(prefs.saveFilePath)) {
         try {
-            const obj = JSON.parse(fs.readFileSync(prefs.saveFilePath, "utf-8"));
-    
-            save = Save.fromObject(obj);
+            save = JSON.parse(fs.readFileSync(prefs.saveFilePath, "utf-8"));
+
             logger.info("Loaded save file successfully");
     
             // Load all NotebookItems into the id-to-object map
@@ -131,9 +130,9 @@ function start() {
     else {
         save = new Save();
 
-        writeSaveToDisk();
-
         logger.info(`Save file at ${prefs.saveFilePath} was not found, creating a new one`);
+
+        writeSaveToDisk();
     }
 
     // Create userStyles.css if it's not there
@@ -193,9 +192,12 @@ function start() {
 
     });
 
-    mainWindow.on("close", (e) => {
-        e.preventDefault();
-        mainWindow.webContents.send("onClose");
+    mainWindow.on("close", () => {
+
+        // TODO save the open page
+        writePrefsToDisk();
+        writeSaveToDisk();
+
     });
 
     // Open the DevTools.
@@ -236,7 +238,7 @@ function processSaveIntoMap() {
     function recurseAdd(item: NotebookItem) {
         idMap.set(item.id, item);
 
-        if (item instanceof Notebook || item instanceof Section) {
+        if (item.type === NBIType.NOTEBOOK || item.type === NBIType.SECTION) {
             item.children.forEach(child => {
                 recurseAdd(child);
             });
@@ -278,6 +280,18 @@ function die(message: string, detail: string) {
 
 // #region API functions for altering/reading the save
 
+ipcMain.on("getPersistentDataPath", (event) => {
+    event.returnValue = persistentDataPath;
+});
+
+ipcMain.on("getPrefs", (event) => {
+    event.returnValue = prefs;
+});
+
+ipcMain.on("setPrefs", (event, _prefs: UserPrefs) => {
+    event.returnValue = UserPrefs.fromObject(_prefs);
+});
+
 ipcMain.on("nbi:getFullSave", (event) => {
     event.returnValue = save;
 });
@@ -290,24 +304,25 @@ ipcMain.on("nbi:create", (event, data: {
     parentId: string,
     obj: NotebookItem
 }) => {
-    
+
+    event.returnValue = 0;
 
     try {
-        if (data.obj instanceof Notebook) {
-            const nb = Notebook.fromObject(data.obj);
+        if (data.obj.type === NBIType.NOTEBOOK) {
+            const nb = data.obj;
     
             save.notebooks.push(nb);
             idMap.set(nb.id, nb);
 
             event.returnValue = 0;
         }
-        else if (data.obj instanceof Section) {
+        else if (data.obj.type === NBIType.SECTION) {
             
             if (idMap.has(data.parentId)) {
-                const section = Section.fromObject(data.obj);
+                const section = data.obj;
     
                 const parent = idMap.get(data.parentId);
-                if (parent instanceof Notebook || parent instanceof Section) {
+                if (parent.type === NBIType.NOTEBOOK || parent.type === NBIType.SECTION) {
                     parent.children.push(section);
                     idMap.set(section.id, section);
 
@@ -319,13 +334,13 @@ ipcMain.on("nbi:create", (event, data: {
             }
     
         }
-        else if (data.obj instanceof Page) {
+        else if (data.obj.type === NBIType.PAGE) {
     
             if (idMap.has(data.parentId)) {
-                const page = Page.fromObject(data.obj);
+                const page = data.obj;
     
                 const parent = idMap.get(data.parentId);
-                if (parent instanceof Notebook || parent instanceof Section) {
+                if (parent.type === NBIType.NOTEBOOK || parent.type === NBIType.SECTION) {
                     parent.children.push(page);
                     idMap.set(page.id, page);
 
@@ -344,14 +359,14 @@ ipcMain.on("nbi:create", (event, data: {
     }
 });
 
-ipcMain.on("nbi:update", (event, data: {
-    obj: NotebookItem
-}) => {
+ipcMain.on("nbi:update", (event, obj: NotebookItem) => {
 
-    if (idMap.has(data.obj.id)) {
-        const item = idMap.get(data.obj.id);
+    event.returnValue = 0;
 
-        Object.assign(item, data.obj);
+    if (idMap.has(obj.id)) {
+        const item = idMap.get(obj.id);
+
+        Object.assign(item, obj);
 
         event.returnValue = 0;
     }
@@ -360,21 +375,21 @@ ipcMain.on("nbi:update", (event, data: {
 
 });
 
-ipcMain.on("nbi:delete", (event, data: {
-    id: string
-}) => {
+ipcMain.on("nbi:delete", (event, id: string) => {
 
-    if (idMap.has(data.id)) {
+    event.returnValue = 0;
+
+    if (idMap.has(id)) {
 
         try {
-            const item = idMap.get(data.id);
+            const item = idMap.get(id);
 
-            if (item instanceof Notebook) {
+            if (item.type === NBIType.NOTEBOOK) {
                 save.notebooks.splice(save.notebooks.indexOf(item), 1);
                 idMap.delete(item.id);
             }
-            else if (item instanceof Section || item instanceof Page) {
-                const parent = idMap.get(item.parentId) as (Notebook | Section);
+            else if (item.type === NBIType.SECTION || item.type === NBIType.PAGE) {
+                const parent = idMap.get(item.parentId);
 
                 parent.children.splice(parent.children.indexOf(item), 1);
                 idMap.delete(item.id);
@@ -382,7 +397,28 @@ ipcMain.on("nbi:delete", (event, data: {
         }
         catch (error) {
             event.returnValue = 1;
-            logger.error(`Error while trying to delete a NotebookItem with ID '${data.id}': ${error}`);
+            logger.error(`Error while trying to delete a NotebookItem with ID '${id}': ${error}`);
+        }
+    }
+    else
+        event.returnValue = 1;
+
+});
+
+ipcMain.on("nbi:toggleExpanded", (event, id: string) => {
+
+    event.returnValue = 0;
+
+    if (idMap.has(id)) {
+
+        try {
+            const item = idMap.get(id);
+
+            item.expanded = !item.expanded;
+        }
+        catch (error) {
+            event.returnValue = 1;
+            logger.error(`Error while trying to toggle 'expanded' property on NotebookItem with ID '${id}': ${error}`);
         }
     }
     else
