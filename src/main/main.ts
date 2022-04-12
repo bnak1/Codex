@@ -316,33 +316,16 @@ ipcMain.on("nbi:create", (event, data: {
 
             event.returnValue = 0;
         }
-        else if (data.obj.type === NBIType.SECTION) {
+        else if (data.obj.type === NBIType.SECTION || data.obj.type === NBIType.PAGE) {
             
             if (idMap.has(data.parentId)) {
-                const section = data.obj;
+                const item = data.obj;
     
                 const parent = idMap.get(data.parentId);
                 if (parent.type === NBIType.NOTEBOOK || parent.type === NBIType.SECTION) {
-                    parent.children.push(section);
-                    idMap.set(section.id, section);
-
-                    event.returnValue = 0;
-                }
-            }
-            else {
-                event.returnValue = 1;
-            }
-    
-        }
-        else if (data.obj.type === NBIType.PAGE) {
-    
-            if (idMap.has(data.parentId)) {
-                const page = data.obj;
-    
-                const parent = idMap.get(data.parentId);
-                if (parent.type === NBIType.NOTEBOOK || parent.type === NBIType.SECTION) {
-                    parent.children.push(page);
-                    idMap.set(page.id, page);
+                    item.parentId = parent.id;
+                    parent.children.push(item);
+                    idMap.set(item.id, item);
 
                     event.returnValue = 0;
                 }
@@ -398,27 +381,6 @@ ipcMain.on("nbi:delete", (event, id: string) => {
         catch (error) {
             event.returnValue = 1;
             logger.error(`Error while trying to delete a NotebookItem with ID '${id}': ${error}`);
-        }
-    }
-    else
-        event.returnValue = 1;
-
-});
-
-ipcMain.on("nbi:toggleExpanded", (event, id: string) => {
-
-    event.returnValue = 0;
-
-    if (idMap.has(id)) {
-
-        try {
-            const item = idMap.get(id);
-
-            item.expanded = !item.expanded;
-        }
-        catch (error) {
-            event.returnValue = 1;
-            logger.error(`Error while trying to toggle 'expanded' property on NotebookItem with ID '${id}': ${error}`);
         }
     }
     else

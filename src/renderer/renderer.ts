@@ -34,6 +34,8 @@ let selectedItem: NotebookItem;
 let createNewItemMode: NBIType;
 let openedPage: NotebookItem;
 
+let draggedItem: NotebookItem = null;
+
 let zoomLevel = 1.000;
 
 let sidebarWidth = 275;
@@ -580,7 +582,7 @@ export function processNotebooks(): void {
             container.appendChild(el);
 
             el.outerHTML = `
-                <li class="nav-item my-sidebar-item" draggable="false">
+                <li class="nav-item my-sidebar-item" draggable="true">
                     <a id="${validatorEscape(item.id)}" href="#list-${validatorEscape(item.id)}" class="nav-link notebook unselectable" data-toggle="collapse" aria-expanded="${item.expanded}" title="${validatorEscape(item.name)}" style="padding-left: calc(1rem + ${marginLeft}px);">
                         <div class="row">
                             <div class="col-auto pr-0">
@@ -624,7 +626,7 @@ export function processNotebooks(): void {
             container.appendChild(el);
 
             el.outerHTML = `
-                <li class="nav-item my-sidebar-item" draggable="false">
+                <li class="nav-item my-sidebar-item" draggable="true">
                     <a id="${validatorEscape(item.id)}" href="#" class="nav-link my-sidebar-link notebook unselectable" title="${validatorEscape(item.name)}" style="padding-left: calc(1rem + ${marginLeft}px);">
                         <div class="row">
                             <div class="col-auto pr-0">
@@ -641,6 +643,7 @@ export function processNotebooks(): void {
             }
         }
 
+        //TODO remove all these validatorEscape things
         document.getElementById(validatorEscape(item.id)).addEventListener("contextmenu", function (e) {
             e.preventDefault();
 
@@ -673,7 +676,7 @@ export function processNotebooks(): void {
 
         if (item.type === NBIType.PAGE) {
             document.getElementById(validatorEscape(item.id)).addEventListener("click", () => {
-                loadPage(api.getNotebookItem(item.id));
+                loadPage(item.id);
 
                 document.querySelectorAll(".my-sidebar-link").forEach(function (tab) {
                     tab.classList.toggle("active", false);
@@ -684,9 +687,45 @@ export function processNotebooks(): void {
         }
         else {
             document.getElementById(validatorEscape(item.id)).addEventListener("click", () => {
-                api.toggleExpanded(item.id);
+                item.expanded = !item.expanded;
+                api.updateNotebookItem(item);
             });
         }
+
+        
+        document.getElementById(item.id).parentElement.addEventListener("dragstart", (event) => {
+            draggedItem = api.getNotebookItem(item.id);
+
+            console.log("xd");
+
+            event.dataTransfer.dropEffect = "move";
+            const img = new Image();
+            event.dataTransfer.setDragImage(img, 0, 0);
+        });
+        document.getElementById(item.id).parentElement.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+
+            if (draggedItem != null) {
+                document.getElementById(item.id).parentElement.style.boxShadow = "0px -2px 0px orange inset";
+            }
+        });
+        document.getElementById(item.id).parentElement.addEventListener("dragleave", (event) => {
+            event.preventDefault();
+
+            if (draggedItem != null) {
+                document.getElementById(item.id).parentElement.style.boxShadow = "none";
+            }
+        });
+        document.getElementById(item.id).parentElement.addEventListener("drop", (event) => {
+            event.preventDefault();
+            document.getElementById(item.id).parentElement.style.boxShadow = "none";
+
+            if (draggedItem != null) {
+                api.createNotebookItem({parentId: document.getElementById(item.id).parentElement.id, obj: draggedItem});
+                processNotebooks();
+            }
+        });
 
     }
 
@@ -714,9 +753,11 @@ export function revertAccentColor(): void {
     document.documentElement.style.setProperty("--accent-color", prefs.accentColor);
 }
 
-function loadPage(page: NotebookItem) {
+function loadPage(pageId: string) {
     showUIPage("editorPage");
     saveOpenedPage();
+
+    const page = api.getNotebookItem(pageId);
 
     if (page.type === NBIType.PAGE) {
         openedPage = page;
@@ -739,6 +780,7 @@ export function saveOpenedPage(showIndicator = false) {
     if (openedPage != null && openedPage.type === NBIType.PAGE && editorView != null) {
         try {
             openedPage.doc = editorView.state.doc.toJSON();
+            api.updateNotebookItem(openedPage);
 
             const title = shorten(openedPage.name);
 
@@ -791,30 +833,16 @@ document.getElementById("newItemForm").addEventListener("submit", (e) => {
 
     if (name !== "") {
 
-        if (createNewItemMode === NBIType.NOTEBOOK) {
-            const nb = new NotebookItem(NBIType.NOTEBOOK);
-            nb.name = name;
-            nb.color = color;
-            nb.icon = icon;
+        const item = new NotebookItem(createNewItemMode);
+        item.name = name;
+        item.color = color;
+        item.icon = icon;
+        item.expanded = true;
 
-            api.createNotebookItem({parentId: null, obj: nb});
-        }
-        else if (createNewItemMode === NBIType.SECTION) {
-            const section = new NotebookItem(NBIType.SECTION);
-            section.name = name;
-            section.color = color;
-            section.icon = icon;
-
-            api.createNotebookItem({parentId: selectedItem.id, obj: section});
-        }
-        else if (createNewItemMode === NBIType.PAGE) {
-            const page = new NotebookItem(NBIType.PAGE);
-            page.name = name;
-            page.color = color;
-            page.icon = icon;
-
-            api.createNotebookItem({parentId: selectedItem.id, obj: page});
-        }
+        if (createNewItemMode === NBIType.NOTEBOOK)
+            api.createNotebookItem({parentId: null, obj: item});
+        else
+            api.createNotebookItem({parentId: selectedItem.id, obj: item});
 
         query("#newItemModal").modal("hide");
 
@@ -854,7 +882,7 @@ document.getElementById("editItemForm").addEventListener("submit", (e) => {
         selectedItem.color = newColor;
         selectedItem.icon = newIcon;
 
-        //api.saveData(save);
+        api.updateNotebookItem(selectedItem);
         processNotebooks();
 
         feather.replace();
@@ -878,46 +906,9 @@ query("#deleteItemButton").on("click", () => {
     saveOpenedPage();
     showUIPage("homePage");
 
-    /*if (selectedItem.type === NBIType.NOTEBOOK) {
-        try {
-            const index = save.notebooks.indexOf(selectedItem);
-            if (index > -1) {
-                save.notebooks.splice(index, 1);
-                //api.saveData(save);
-                processNotebooks();
-            }
-            else {
-                errorPopup(`Could not delete the item ${selectedItem.name}`, "Check the developer console and report this error to the GitHub Issues page.");
-                console.error(`Notebook with name '${selectedItem.name}' was not found in save.notebooks.`);
-            }
-        }
-        catch (err) {
-            errorPopup(`Could not delete the item ${selectedItem.name}`, "Check the developer console and report this error to the GitHub Issues page.");
-            console.error(err);
-        }
-    }
-    else if (selectedItem.type === NBIType.SECTION || selectedItem.type === NBIType.PAGE) {
-        const parent = idToObjectMap.get(selectedItem.parentId);
+    api.deleteNotebookItem(selectedItem.id);
 
-        if (parent != null) {
-            try {
-                const index = parent.children.indexOf(selectedItem);
-                if (index > -1) {
-                    parent.children.splice(index, 1);
-                    //api.saveData(save);
-                    processNotebooks();
-                }
-                else {
-                    errorPopup(`Could not delete the item ${selectedItem.name}`, "Check the developer console and report this error to the GitHub Issues page.");
-                    console.error(`Item with name '${selectedItem.name}' was not found directly inside '${parent.name}'.`);
-                }
-            }
-            catch (err) {
-                errorPopup(`Could not delete the item ${selectedItem.name}`, "Check the developer console and report this error to the GitHub Issues page.");
-                console.error(err);
-            }
-        }
-    }*/
+    processNotebooks();
     
     query("#deleteItemModal").modal("hide");
 });

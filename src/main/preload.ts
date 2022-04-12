@@ -18,7 +18,6 @@ export type MainAPI = {
     createNotebookItem(data: { parentId: string, obj: NotebookItem }): number,
     updateNotebookItem(obj: NotebookItem): number,
     deleteNotebookItem(id: string): number,
-    toggleExpanded(id: string): number
 }
 
 const api: MainAPI = {
@@ -97,10 +96,6 @@ const api: MainAPI = {
 
     deleteNotebookItem: (id: string): number => {
         return ipcRenderer.sendSync("nbi:delete", id);
-    },
-
-    toggleExpanded: (id: string): number => {
-        return ipcRenderer.sendSync("nbi:toggleExpanded", id);
     }
 };
 
