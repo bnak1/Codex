@@ -1,0 +1,13 @@
+write simple program that will calculate the cost of training fees for their atletes each month
+athlete name
+training plan
+current weight in kilograms (kg)
+competition Age category
+number of competitions entered this month
+option to add the number of hours private coaching.
+For each athlete, the program should then output the following information:
+the athlete’s name
+an itemized list of all costs for the month
+the total cost of training and competitions for the month
+how their current age compares to their competition age category.
+AZFA currently have sixteen athletes enrolled on their training program, but they would like the ability to register more.
